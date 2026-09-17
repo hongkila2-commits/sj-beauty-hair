@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BookingCTA from '../components/BookingCTA.astro';
-import { BRAND, COMPANY, CURRICULUM } from '../config';
+import { BRAND, COMPANY } from '../config';
 ---
 
 <BaseLayout
@@ -48,29 +48,6 @@ import { BRAND, COMPANY, CURRICULUM } from '../config';
     </div>
   </section>
 
-  <section class="section section--surface">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="section-head__num">02</span>
-        <h2 class="section-head__title">디자이너 교육</h2>
-        <p class="section-head__desc">A~D 단계별 3개월 과정 · 전 과정 수료 후 승급 테스트</p>
-      </div>
-      <p class="about__lead">
-        모든 디자이너는 단계별 교육과 승급 테스트를 거칩니다. 어느 지점에서 시술받으셔도
-        같은 기준의 손끝을 만나실 수 있도록 하기 위함입니다.
-      </p>
-      <ol class="steps">
-        {CURRICULUM.map((item, index) => (
-          <li class="steps__item" data-variant={index % 2 === 0 ? 'tan' : 'blue'}>
-            <span class="steps__badge">STEP {item.step}</span>
-            <h3 class="steps__title">{item.title}</h3>
-            <p class="steps__sub">{item.subtitle}</p>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-
   <BookingCTA />
 </BaseLayout>
 
@@ -86,26 +63,4 @@ import { BRAND, COMPANY, CURRICULUM } from '../config';
   .about__fact dt { font-size: 0.875rem; color: var(--ink-faint); letter-spacing: 0.04em; }
   .about__fact dd { margin: 0; font-weight: 600; }
 
-  .about__lead { max-width: 60ch; color: var(--ink-soft); margin-bottom: 36px; }
-
-  .steps { list-style: none; display: grid; gap: 14px; counter-reset: step; }
-  @media (min-width: 760px) { .steps { grid-template-columns: repeat(5, 1fr); gap: 12px; } }
-
-  .steps__item {
-    padding: 24px 20px; border-radius: var(--radius);
-    background: var(--white); border: 1px solid var(--line);
-  }
-  .steps__item[data-variant='tan'] { background: var(--tan); border-color: transparent; }
-  .steps__item[data-variant='blue'] { background: var(--blue); border-color: transparent; color: var(--white); }
-  .steps__item[data-variant='blue'] .steps__badge,
-  .steps__item[data-variant='blue'] .steps__title,
-  .steps__item[data-variant='blue'] .steps__sub { color: var(--white); }
-
-  .steps__badge {
-    display: block; font-size: 0.6875rem; font-weight: 700;
-    letter-spacing: 0.14em; color: #6b6249; margin-bottom: 10px;
-  }
-  .steps__title { font-size: 1rem; margin-bottom: 4px; color: #3f3a2c; }
-  .steps__sub { margin: 0; font-size: 0.875rem; color: #5c553f; }
-  .steps__item:not([data-variant]) .steps__title { color: var(--ink); }
 </style>

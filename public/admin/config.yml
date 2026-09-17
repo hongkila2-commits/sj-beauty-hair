@@ -84,3 +84,55 @@ collections:
         widget: boolean
         default: false
       - { name: body, label: 메모, widget: markdown, required: false }
+
+  # ── 사이트 설정 ──────────────────────────────────────────────
+  # 폴더에 글을 쌓는 위 컬렉션과 달리, 정해진 파일 하나를 양식으로 편집한다.
+  # 주의: 여기에 적지 않은 항목은 저장할 때 파일에서 사라진다.
+  #       그래서 구조 정보(주소·사진·자치구)는 이 파일이 아니라 src/config.ts 에 둔다.
+  - name: settings
+    label: 사이트 설정
+    files:
+      - name: contact
+        label: 연락처 · 영업시간
+        file: content/settings/site.json
+        format: json
+        fields:
+          - { name: email, label: 대표 이메일, widget: string }
+          - name: instagram
+            label: 인스타그램 주소
+            widget: string
+            hint: 전체 주소를 넣으세요. 화면에 표시될 @아이디는 자동으로 뽑아냅니다.
+          - name: phone
+            label: 대표 전화번호
+            widget: string
+            required: false
+            hint: 비워두면 홈페이지에 전화 버튼이 나타나지 않습니다.
+          - { name: hoursOpen, label: 영업 시작 시각, widget: string, hint: '예) 10:00' }
+          - { name: hoursClose, label: 영업 종료 시각, widget: string, hint: '예) 20:30' }
+          - { name: hoursNote, label: 휴무 안내, widget: string, hint: '예) 연중무휴 (명절 휴무)' }
+
+      - name: branches
+        label: 지점별 전화 · 예약 링크
+        file: content/settings/branches.json
+        format: json
+        fields:
+          - name: branches
+            label: 지점
+            widget: list
+            summary: '{{fields.label}}'
+            fields:
+              # slug 와 label 은 화면에 보이지 않지만 값은 그대로 보존된다.
+              # slug 가 바뀌면 지점 페이지 주소가 깨지므로 편집 대상에서 뺐다.
+              - { name: slug, widget: hidden }
+              - { name: label, widget: hidden }
+              - { name: phone, label: 전화번호, widget: string, required: false }
+              - name: naverBooking
+                label: 네이버 예약 주소
+                widget: string
+                required: false
+                hint: 주소를 넣으면 메인과 지점 페이지에 예약 버튼이 자동으로 나타납니다.
+              - name: naverMap
+                label: 네이버 지도 주소
+                widget: string
+                required: false
+                hint: 비워두면 주소로 검색하는 링크가 대신 쓰입니다.

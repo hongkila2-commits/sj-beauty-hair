@@ -1,0 +1,9 @@
+{
+  "branches": [
+    { "slug": "dunsan", "label": "둔산본점", "phone": "", "naverBooking": "", "naverMap": "" },
+    { "slug": "yuseong", "label": "유성점", "phone": "", "naverBooking": "", "naverMap": "" },
+    { "slug": "lotte", "label": "롯데점", "phone": "", "naverBooking": "", "naverMap": "" },
+    { "slug": "bongmyeong", "label": "봉명점", "phone": "", "naverBooking": "", "naverMap": "" },
+    { "slug": "songchon", "label": "송촌점", "phone": "", "naverBooking": "", "naverMap": "" }
+  ]
+}

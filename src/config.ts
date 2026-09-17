@@ -1,24 +1,42 @@
 /**
  * 사이트 전체가 참조하는 단일 데이터 소스.
  *
- * ▸ 값을 바꾸려면 이 파일만 고치면 모든 페이지에 반영된다.
+ * ▸ 자주 바뀌는 값(연락처·영업시간·지점 전화·예약 링크)은 이 파일이 아니라
+ *   content/settings/*.json 에 있고, 관리자가 /admin 화면에서 직접 고친다.
+ *   이 파일은 그 값을 읽어와 페이지가 쓰기 좋은 모양으로 합쳐줄 뿐이다.
  * ▸ 빈 문자열('')인 항목은 "아직 정보를 못 받은 자리"다. 값을 채우면
  *   해당 버튼·링크가 화면에 자동으로 나타나고, 비워두면 숨겨진다.
  */
 
+import siteSettings from '../content/settings/site.json';
+import branchSettings from '../content/settings/branches.json';
+
+/** 인스타그램 주소에서 표시용 아이디(@handle)를 뽑는다. 관리자가 두 번 입력하지 않도록. */
+function instagramHandleOf(url: string): string {
+  const handle = url.replace(/\/+$/, '').split('/').pop() ?? '';
+  return handle ? `@${handle}` : '';
+}
+
 export const BRAND = {
+  // 브랜드 정체성 — 거의 바뀌지 않으므로 코드에 둔다
   nameKo: 'SJ뷰티헤어',
   nameEn: 'SJ BEAUTY HAIR',
   tagline: '대전의 오늘을 가장 먼저 입는 헤어',
   description:
     '2016년 둔산본점에서 시작해 대전 5개 지점으로 성장한 미용실 브랜드입니다. 최신 스타일과 트렌드를 반영한 시술, 그리고 꾸준한 교육으로 다져진 디자이너가 함께합니다.',
-  instagram: 'https://www.instagram.com/sj_beautyhair/',
-  instagramHandle: '@sj_beautyhair',
-  email: 'a861130@naver.com',
-  /** 지점 대표번호를 아직 못 받았다. 값을 넣으면 헤더·푸터에 전화 버튼이 생긴다. */
-  phone: '',
-  hours: { open: '10:00', close: '20:30', note: '연중무휴 (명절 휴무)' },
-} as const;
+
+  // 아래는 /admin → 사이트 설정 → 연락처·영업시간 에서 바뀐다
+  instagram: siteSettings.instagram,
+  instagramHandle: instagramHandleOf(siteSettings.instagram),
+  email: siteSettings.email,
+  /** 비어 있으면 헤더·푸터의 전화 버튼이 숨겨진다. */
+  phone: siteSettings.phone,
+  hours: {
+    open: siteSettings.hoursOpen,
+    close: siteSettings.hoursClose,
+    note: siteSettings.hoursNote,
+  },
+};
 
 /**
  * 검색엔진 사이트 등록용 인증 코드.
@@ -56,16 +74,16 @@ export type Branch = {
   road: string;
 };
 
-/** PDF 기업소개서 4페이지 기준. 주소·오픈일은 확정 사실이다. */
-export const BRANCHES: Branch[] = [
+/**
+ * 지점의 '구조' 정보. PDF 기업소개서 4페이지 기준이며 주소·오픈일은 확정 사실이다.
+ * 전화번호·예약 링크·지도 링크는 여기에 두지 않는다 — 아래에서 JSON 값으로 채운다.
+ */
+const BRANCH_BASE: Omit<Branch, 'phone' | 'naverBooking' | 'naverMap'>[] = [
   {
     slug: 'dunsan',
     name: '둔산본점',
     address: '대전 서구 둔산남로 93 지안빌딩 2층',
     openedAt: '2016-06',
-    phone: '',
-    naverBooking: '',
-    naverMap: '',
     photo: '/branches/dunsan.webp',
     district: '서구',
     road: '둔산남로',
@@ -76,9 +94,6 @@ export const BRANCHES: Branch[] = [
     name: '유성점',
     address: '대전 유성구 대학로 151번길 26 홍일빌딩 2층',
     openedAt: '2016-06',
-    phone: '',
-    naverBooking: '',
-    naverMap: '',
     photo: '/branches/yuseong.webp',
     district: '유성구',
     road: '대학로',
@@ -88,9 +103,6 @@ export const BRANCHES: Branch[] = [
     name: '롯데점',
     address: '대전 서구 계룡로 599 한밭새마을금고사옥 2층',
     openedAt: '2018-02',
-    phone: '',
-    naverBooking: '',
-    naverMap: '',
     photo: '/branches/lotte.webp',
     district: '서구',
     road: '계룡로',
@@ -100,9 +112,6 @@ export const BRANCHES: Branch[] = [
     name: '봉명점',
     address: '대전 유성구 문화원로 94 래자미탐앤탐 2층',
     openedAt: '2022-10',
-    phone: '',
-    naverBooking: '',
-    naverMap: '',
     photo: '/branches/bongmyeong.webp',
     district: '유성구',
     road: '문화원로',
@@ -112,14 +121,28 @@ export const BRANCHES: Branch[] = [
     name: '송촌점',
     address: '대전 대덕구 계족산로 81번길 101 선우빌딩 2층',
     openedAt: '2022-02',
-    phone: '',
-    naverBooking: '',
-    naverMap: '',
     photo: '/branches/songchon.webp',
     district: '대덕구',
     road: '계족산로',
   },
 ];
+
+/**
+ * 구조 정보 + 관리자가 /admin 에서 입력한 값을 slug 로 짝지어 합친다.
+ * JSON 에 해당 지점이 없거나 값이 비어 있으면 빈 문자열이 되고,
+ * 그 경우 관련 버튼이 화면에서 자동으로 숨겨진다.
+ */
+const EDITABLE = new Map(branchSettings.branches.map((b) => [b.slug, b]));
+
+export const BRANCHES: Branch[] = BRANCH_BASE.map((base) => {
+  const edited = EDITABLE.get(base.slug);
+  return {
+    ...base,
+    phone: edited?.phone ?? '',
+    naverBooking: edited?.naverBooking ?? '',
+    naverMap: edited?.naverMap ?? '',
+  };
+});
 
 /** PDF 3페이지 회사 개요표. */
 export const COMPANY = [
