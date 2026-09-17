@@ -6,11 +6,13 @@
 #       그래서 지점 주소·사진·자치구 같은 구조 정보는 src/config.ts 에 둔다.
 # ─────────────────────────────────────────────────────────────
 
+# __SITE_URL__ 은 빌드할 때 src/site.mjs 의 주소로 자동 치환된다.
+# 도메인을 바꿀 때 이 파일은 손대지 않는다.
 backend:
   name: github
   repo: hongkila2-commits/sj-beauty-hair
   branch: main
-  base_url: https://sj-beauty-hair.vercel.app
+  base_url: __SITE_URL__
   auth_endpoint: api/auth
 
 media_folder: public/uploads
@@ -18,9 +20,9 @@ public_folder: /uploads
 
 locale: ko
 
-site_url: https://sj-beauty-hair.vercel.app
-display_url: https://sj-beauty-hair.vercel.app
-logo_url: https://sj-beauty-hair.vercel.app/logo.png
+site_url: __SITE_URL__
+display_url: __SITE_URL__
+logo_url: __SITE_URL__/logo.png
 
 collections:
   # ── 헤어칼럼 ────────────────────────────────────────────────

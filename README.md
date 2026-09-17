@@ -158,7 +158,7 @@ npm run check
 `/admin` → **사이트 설정 → 점검 안내** 에서 요일·시간·문구를 바꾸거나 끌 수 있습니다.
 
 - **점검 중에도 원장님은 보실 수 있습니다** — 주소 뒤에 `?preview=1` 을 붙이세요.
-  예: `https://sj-beauty-hair.vercel.app/?preview=1`
+  예: `https://sjbthair.com/?preview=1`
 - 손님은 점검 중에도 예약·전화·인스타그램 DM 버튼을 쓸 수 있습니다.
 - 네이버·구글 검색 로봇에게는 보이지 않습니다 (검색 노출을 지키기 위함).
 - **급하게 점검이 필요할 때**도 쓸 수 있습니다. 시작·종료 시각을 지금 시각으로
@@ -177,6 +177,28 @@ npm run dev      # 로컬 서버 (http://localhost:4321)
 npm run build    # 배포용 빌드 → dist/
 npm run preview  # 빌드 결과 확인
 ```
+
+### 도메인 바꾸는 법
+
+**`src/site.mjs` 의 `url` 한 줄만 고치면 됩니다.** 대표주소·사이트맵·RSS·카카오톡
+공유 이미지·관리자 화면 설정까지 전부 여기서 나옵니다.
+
+```js
+export const SITE = {
+  url: 'https://sjbthair.com',   // ← 여기만
+  repo: 'hongkila2-commits/sj-beauty-hair',
+};
+```
+
+고친 뒤 **반드시 함께 해야 할 것 두 가지**가 있습니다.
+
+1. **Vercel** → Settings → Domains 에 새 도메인 추가
+2. **GitHub OAuth App** → Authorization callback URL 을 `https<새도메인>/api/callback` 로 변경
+   — 이걸 빠뜨리면 `/admin` 로그인이 `redirect_uri_mismatch` 오류로 막힙니다
+
+> 관리자 화면 설정(`public/admin/config.yml`)에는 주소 대신 `__SITE_URL__` 이
+> 적혀 있습니다. 빌드할 때 자동으로 채워지므로 **이 파일은 손대지 마세요.**
+> 치환에 실패하면 빌드가 멈추고 어느 파일인지 알려줍니다.
 
 ### 구조
 
