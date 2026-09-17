@@ -32,8 +32,39 @@ const videos = defineCollection({
       .regex(/^[A-Za-z0-9_-]{11}$/, '유튜브 코드는 영문·숫자·-·_ 로 된 11자리여야 합니다.'),
     date: z.coerce.date(),
     description: z.string().optional(),
+    /** 직접 올린 대표 이미지. 없으면 유튜브가 만든 썸네일을 쓴다. */
+    thumbnail: z.string().optional(),
     draft: z.boolean().default(false),
   }),
 });
 
-export const collections = { posts, videos };
+/** 카드뉴스 배경으로 고를 수 있는 브랜드 색. */
+export const ACCENTS = ['blue', 'tan', 'sand', 'olive'] as const;
+
+const promotions = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './content/promotions' }),
+  schema: z.object({
+    title: z.string(),
+    subtitle: z.string().optional(),
+    /** 카드 위에 붙는 작은 딱지. 예) '상시', '10월 한정' */
+    badge: z.string().optional(),
+    period: z.string().optional(),
+    accent: z.enum(ACCENTS).default('blue'),
+    thumbnail: z.string().optional(),
+    /** 목록에서의 순서. 작은 수가 앞에 온다. */
+    order: z.number().default(99),
+    /** 카드뉴스 한 장 한 장. 관리 화면에서 추가·삭제·순서변경 할 수 있다. */
+    cards: z
+      .array(
+        z.object({
+          heading: z.string(),
+          body: z.string().optional(),
+          image: z.string().optional(),
+        }),
+      )
+      .default([]),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { posts, videos, promotions };

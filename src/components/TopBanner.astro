@@ -1,0 +1,56 @@
+---
+/**
+ * 화면 최상단 띠배너. 진행 중인 이벤트를 모든 페이지에서 알린다.
+ * 관리자가 /admin → 사이트 설정 → 띠배너·팝업 에서 끄면 아예 출력되지 않는다.
+ */
+import { PROMO } from '../config';
+
+const show = PROMO.bannerEnabled && PROMO.bannerText;
+---
+
+{show && (
+  <aside class="top-banner">
+    {PROMO.bannerLink ? (
+      <a href={PROMO.bannerLink} class="top-banner__link">
+        <span class="top-banner__text">{PROMO.bannerText}</span>
+        {PROMO.bannerLinkText && (
+          <span class="top-banner__more">{PROMO.bannerLinkText} →</span>
+        )}
+      </a>
+    ) : (
+      <span class="top-banner__text">{PROMO.bannerText}</span>
+    )}
+  </aside>
+)}
+
+<style>
+  .top-banner {
+    background: var(--blue);
+    color: var(--white);
+    text-align: center;
+    font-size: 0.875rem;
+  }
+
+  .top-banner__link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .top-banner__link:hover .top-banner__more { text-decoration: underline; }
+
+  .top-banner__text { font-weight: 600; }
+
+  .top-banner__more {
+    font-size: 0.8125rem;
+    opacity: 0.9;
+    white-space: nowrap;
+  }
+
+  /* 링크가 없을 때도 같은 높이를 유지한다 */
+  .top-banner > .top-banner__text { display: block; padding: 10px 16px; }
+</style>

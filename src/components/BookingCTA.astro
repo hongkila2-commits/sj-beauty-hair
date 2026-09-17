@@ -1,12 +1,14 @@
 ---
 /**
- * 네이버 예약 유도 영역.
- * config.ts 의 naverBooking 값이 있는 지점만 버튼이 나온다.
- * 아직 주소를 못 받았다면 전체가 "예약 문의" 안내로 바뀐다.
+ * 예약 유도 영역.
+ *
+ * 예약 전용 주소가 아직 없어 네이버 플레이스로 연결된다(config.ts 의 bookingLink 참고).
+ * 지점별 링크가 하나도 없으면 전화·인스타그램 문의로 자동 대체된다.
  */
-import { BRANCHES, BRAND } from '../config';
+import { BRANCHES, BRAND, bookingLink } from '../config';
 
-const bookable = BRANCHES.filter((b) => b.naverBooking);
+const bookable = BRANCHES.map((b) => ({ branch: b, link: bookingLink(b) })).filter((x) => x.link);
+const hasAny = bookable.length > 0;
 ---
 
 <section class="booking section section--sand">
@@ -19,18 +21,23 @@ const bookable = BRANCHES.filter((b) => b.naverBooking);
       </p>
     </div>
 
-    {bookable.length > 0 ? (
+    {hasAny ? (
       <ul class="booking__list">
-        {bookable.map((b) => (
+        {bookable.map(({ branch, link }) => (
           <li>
-            <a href={b.naverBooking} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
-              {b.name} 예약
+            <a href={link!.href} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
+              {branch.name} 예약
             </a>
           </li>
         ))}
       </ul>
     ) : (
       <div class="booking__fallback">
+        {BRAND.phone && (
+          <a href={`tel:${BRAND.phone.replace(/-/g, '')}`} class="btn btn--primary">
+            전화 예약 {BRAND.phone}
+          </a>
+        )}
         <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
           인스타그램 DM으로 문의
         </a>
@@ -41,9 +48,7 @@ const bookable = BRANCHES.filter((b) => b.naverBooking);
 </section>
 
 <style>
-  .booking__inner {
-    display: grid; gap: 28px; align-items: center;
-  }
+  .booking__inner { display: grid; gap: 28px; align-items: center; }
   .booking__title { font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 8px; }
   .booking__desc { margin: 0; color: var(--ink-soft); }
   .booking__list { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }

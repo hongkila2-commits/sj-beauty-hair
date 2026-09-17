@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { BRAND, CURRICULUM, WORKPLACE } from '../config';
+import { BRAND, CURRICULUM, WORKPLACE, PAGES } from '../config';
 ---
 
 <BaseLayout
@@ -11,7 +11,7 @@ import { BRAND, CURRICULUM, WORKPLACE } from '../config';
     <div class="wrap">
       <div class="section-head">
         <span class="section-head__num">06</span>
-        <h1 class="section-head__title">디자이너 교육과정</h1>
+        <h1 class="section-head__title">{PAGES.recruitTitle}</h1>
         <p class="section-head__desc">주 2회 교육 · 연습과 과제 지도 · 승급테스트 대비 추가 교육</p>
       </div>
 
@@ -36,7 +36,7 @@ import { BRAND, CURRICULUM, WORKPLACE } from '../config';
     <div class="wrap">
       <div class="section-head">
         <span class="section-head__num">07</span>
-        <h2 class="section-head__title">근무환경</h2>
+        <h2 class="section-head__title">{PAGES.workplaceTitle}</h2>
       </div>
 
       <div class="work">

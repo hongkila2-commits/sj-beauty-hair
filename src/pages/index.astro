@@ -4,11 +4,17 @@ import BranchCard from '../components/BranchCard.astro';
 import PostCard from '../components/PostCard.astro';
 import VideoCard from '../components/VideoCard.astro';
 import BookingCTA from '../components/BookingCTA.astro';
-import { BRAND, BRANCHES } from '../config';
-import { publishedPosts, publishedVideos } from '../lib/content';
+import StyleCards from '../components/StyleCards.astro';
+import EventCard from '../components/EventCard.astro';
+import { BRAND, BRANCHES, HOME, bookingLink } from '../config';
+import { publishedPosts, publishedVideos, publishedPromotions } from '../lib/content';
 
 const posts = (await publishedPosts()).slice(0, 3);
 const videos = (await publishedVideos()).slice(0, 3);
+const promotions = (await publishedPromotions()).slice(0, 3);
+
+/** 히어로 첫 버튼. 예약 링크가 없으면 지점 안내로 보낸다. */
+const heroBooking = bookingLink() ?? bookingLink(BRANCHES.find((b) => b.isFlagship));
 
 /** 검색엔진이 "대전 미용실"로 이 브랜드를 찾게 하는 구조화 데이터 */
 const orgSchema = {
@@ -35,17 +41,26 @@ const orgSchema = {
 
   <section class="hero">
     <div class="wrap hero__inner">
-      <p class="eyebrow">Daejeon · Since 2016</p>
+      <p class="eyebrow">{HOME.heroEyebrow}</p>
       <h1 class="hero__title">{BRAND.tagline}</h1>
+
+      <StyleCards />
+
       <p class="hero__lead">{BRAND.description}</p>
       <div class="hero__actions">
-        <a href="/branches" class="btn btn--primary">지점 찾기</a>
-        <a href="/blog" class="btn btn--outline">헤어칼럼 보기</a>
+        {heroBooking ? (
+          <a href={heroBooking.href} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
+            {HOME.primaryCtaText}
+          </a>
+        ) : (
+          <a href="/branches" class="btn btn--primary">{HOME.primaryCtaText}</a>
+        )}
+        <a href={HOME.secondaryCtaLink} class="btn btn--outline">{HOME.secondaryCtaText}</a>
       </div>
       <dl class="hero__stats">
-        <div><dt>지점</dt><dd>5곳</dd></div>
-        <div><dt>디자이너·스태프</dt><dd>53명</dd></div>
-        <div><dt>브랜드 운영</dt><dd>{new Date().getFullYear() - 2016}년</dd></div>
+        {HOME.stats.map((stat) => (
+          <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>
+        ))}
       </dl>
     </div>
     <div class="hero__shapes" aria-hidden="true"><span></span><span></span></div>
@@ -55,8 +70,8 @@ const orgSchema = {
     <div class="wrap">
       <div class="section-head">
         <span class="section-head__num">01</span>
-        <h2 class="section-head__title">지점안내</h2>
-        <p class="section-head__desc">대전 서구 · 유성구 · 대덕구 5개 지점</p>
+        <h2 class="section-head__title">{HOME.branchesTitle}</h2>
+        <p class="section-head__desc">{HOME.branchesDesc}</p>
       </div>
       <div class="grid grid--3">
         {BRANCHES.map((branch) => <BranchCard branch={branch} />)}
@@ -66,12 +81,28 @@ const orgSchema = {
 
   <BookingCTA />
 
-  <section class="section">
+  {promotions.length > 0 && (
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-head__num">02</span>
+          <h2 class="section-head__title">{HOME.eventsTitle}</h2>
+          <p class="section-head__desc">{HOME.eventsDesc}</p>
+        </div>
+        <div class="grid grid--3">
+          {promotions.map((promotion) => <EventCard promotion={promotion} />)}
+        </div>
+        <p class="more"><a href="/events" class="btn btn--ghost">이벤트 전체 보기 →</a></p>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--surface">
     <div class="wrap">
       <div class="section-head">
-        <span class="section-head__num">02</span>
-        <h2 class="section-head__title">헤어칼럼</h2>
-        <p class="section-head__desc">모발 관리와 스타일에 관한 이야기</p>
+        <span class="section-head__num">03</span>
+        <h2 class="section-head__title">{HOME.blogTitle}</h2>
+        <p class="section-head__desc">{HOME.blogDesc}</p>
       </div>
       {posts.length > 0 ? (
         <>
@@ -87,12 +118,12 @@ const orgSchema = {
   </section>
 
   {videos.length > 0 && (
-    <section class="section section--surface">
+    <section class="section">
       <div class="wrap">
         <div class="section-head">
-          <span class="section-head__num">03</span>
-          <h2 class="section-head__title">영상</h2>
-          <p class="section-head__desc">시술 과정과 스타일링 팁</p>
+          <span class="section-head__num">04</span>
+          <h2 class="section-head__title">{HOME.videosTitle}</h2>
+          <p class="section-head__desc">{HOME.videosDesc}</p>
         </div>
         <div class="grid grid--3">
           {videos.map((video) => <VideoCard video={video} />)}
@@ -112,10 +143,10 @@ const orgSchema = {
     font-size: clamp(2rem, 7vw, 3.5rem);
     line-height: 1.18;
     letter-spacing: -0.03em;
-    margin-bottom: 20px;
+    margin-bottom: 28px;
     max-width: 12em;
   }
-  .hero__lead { font-size: 1.0625rem; color: var(--ink-soft); max-width: 46ch; margin-bottom: 32px; }
+  .hero__lead { font-size: 1.0625rem; color: var(--ink-soft); max-width: 46ch; margin: 32px 0; }
   .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
   .hero__stats {

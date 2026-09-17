@@ -1,49 +1,68 @@
 ---
 /**
  * 유튜브 영상 카드.
- * 처음에는 썸네일만 띄우고, 클릭했을 때 비로소 유튜브 플레이어를 불러온다.
- * (영상 10개를 한 번에 embed 하면 페이지가 매우 느려지기 때문)
+ *
+ * 누르면 유튜브에서 열린다. 그 자리에서 재생하지 않는 이유는, 관리자가 올린
+ * 대표 이미지를 그대로 보여주고 재생은 유튜브에 맡기는 편이 관리도 쉽고
+ * 페이지도 가볍기 때문이다(이 컴포넌트는 브라우저로 나가는 스크립트가 없다).
+ *
+ * 대표 이미지를 올리지 않으면 유튜브가 자동 생성한 썸네일을 대신 쓴다.
  */
 import { formatDate, isoDate } from '../lib/content';
 
 interface Props {
-  video: { data: { title: string; youtubeId: string; date: Date; description?: string } };
+  video: {
+    data: {
+      title: string;
+      youtubeId: string;
+      date: Date;
+      description?: string;
+      thumbnail?: string;
+    };
+  };
 }
 const { video } = Astro.props;
-const { title, youtubeId, date, description } = video.data;
+const { title, youtubeId, date, description, thumbnail } = video.data;
+
+const watchUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+const image = thumbnail || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
 ---
 
 <article class="video-card card">
-  <div class="video-card__frame" data-youtube-id={youtubeId} data-title={title}>
-    <button type="button" class="video-card__play">
-      <img
-        src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`}
-        alt=""
-        loading="lazy"
-        width="480"
-        height="360"
-      />
-      <span class="video-card__icon" aria-hidden="true">▶</span>
-      <span class="visually-hidden">{title} 재생</span>
-    </button>
-  </div>
+  <a
+    class="video-card__frame"
+    href={watchUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={`${title} — 유튜브에서 보기`}
+  >
+    <img src={image} alt="" loading="lazy" width="480" height="360" />
+    <span class="video-card__icon" aria-hidden="true">▶</span>
+  </a>
+
   <div class="card__body">
-    <h3 class="video-card__title">{title}</h3>
+    <h3 class="video-card__title">
+      <a href={watchUrl} target="_blank" rel="noopener noreferrer">{title}</a>
+    </h3>
     {description && <p class="video-card__desc">{description}</p>}
     <time class="video-card__date" datetime={isoDate(date)}>{formatDate(date)}</time>
   </div>
 </article>
 
 <style>
-  .video-card__frame { position: relative; aspect-ratio: 16 / 9; background: #000; }
-  .video-card__frame :global(iframe) {
-    position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+  .video-card__frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
   }
-  .video-card__play {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    padding: 0; border: 0; background: none; cursor: pointer; display: block;
+  .video-card__frame img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.25s ease, opacity 0.18s ease;
   }
-  .video-card__play img { width: 100%; height: 100%; object-fit: cover; }
+  .video-card__frame:hover img { transform: scale(1.03); opacity: 0.9; }
+
   .video-card__icon {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 62px; height: 62px; border-radius: 50%;
@@ -51,27 +70,11 @@ const { title, youtubeId, date, description } = video.data;
     color: #fff; font-size: 1.1rem; line-height: 62px; text-align: center;
     padding-left: 4px; transition: transform 0.18s ease;
   }
-  .video-card__play:hover .video-card__icon { transform: translate(-50%, -50%) scale(1.08); }
+  .video-card__frame:hover .video-card__icon { transform: translate(-50%, -50%) scale(1.08); }
+
   .video-card__title { font-size: 1.0625rem; margin: 0; }
+  .video-card__title a { text-decoration: none; }
+  .video-card__title a:hover { color: var(--blue); }
   .video-card__desc { margin: 0; font-size: 0.9375rem; color: var(--ink-soft); }
   .video-card__date { margin-top: auto; padding-top: 10px; font-size: 0.8125rem; color: var(--ink-faint); }
 </style>
-
-<script>
-  // 썸네일을 누르면 그 자리에 유튜브 플레이어를 넣고 바로 재생한다.
-  document.addEventListener('click', (event) => {
-    const button = (event.target as HTMLElement)?.closest('.video-card__play');
-    if (!button) return;
-
-    const frame = button.closest<HTMLElement>('.video-card__frame');
-    const id = frame?.dataset.youtubeId;
-    if (!frame || !id) return;
-
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
-    iframe.title = frame.dataset.title ?? '영상';
-    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-    iframe.allowFullscreen = true;
-    frame.replaceChildren(iframe);
-  });
-</script>

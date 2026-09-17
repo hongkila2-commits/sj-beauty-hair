@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { BRAND, BRANCHES, mapUrl } from '../config';
+import { BRAND, BRANCHES, mapUrl, PAGES } from '../config';
 ---
 
 <BaseLayout
@@ -11,13 +11,13 @@ import { BRAND, BRANCHES, mapUrl } from '../config';
     <div class="wrap">
       <div class="section-head">
         <span class="section-head__num">05</span>
-        <h1 class="section-head__title">문의</h1>
+        <h1 class="section-head__title">{PAGES.contactTitle}</h1>
         <p class="section-head__desc">매일 {BRAND.hours.open} – {BRAND.hours.close}</p>
       </div>
 
       <div class="contact">
         <div class="contact__form-col">
-          <h3 class="contact__sub">문의 남기기</h3>
+          <h3 class="contact__sub">{PAGES.contactFormTitle}</h3>
           <p class="contact__hint">
             아래 내용을 채우고 보내기를 누르면, 사용하시는 메일 앱이 열리면서 내용이 자동으로
             채워집니다. 확인 후 전송해 주세요.

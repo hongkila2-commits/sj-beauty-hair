@@ -1,0 +1,167 @@
+---
+/**
+ * 이벤트 안내 화면 — 카드뉴스 형태.
+ * 한 장에 큰 제목 하나와 짧은 문장 하나. 번호를 매겨 순서대로 읽히게 한다.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EventCard from '../../components/EventCard.astro';
+import { render } from 'astro:content';
+import { publishedPromotions } from '../../lib/content';
+import { BRAND, BRANCHES, bookingLink } from '../../config';
+import type { GetStaticPaths } from 'astro';
+
+export const getStaticPaths = (async () => {
+  const promotions = await publishedPromotions();
+  return promotions.map((promotion) => ({
+    params: { slug: promotion.id },
+    props: { promotion, promotions },
+  }));
+}) satisfies GetStaticPaths;
+
+const { promotion, promotions } = Astro.props;
+const { Content } = await render(promotion);
+const { title, subtitle, badge, period, accent, thumbnail, cards } = promotion.data;
+
+const others = promotions.filter((p) => p.id !== promotion.id).slice(0, 3);
+const booking = bookingLink() ?? bookingLink(BRANCHES.find((b) => b.isFlagship));
+
+const offerSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Offer',
+  name: title,
+  description: subtitle ?? '',
+  seller: { '@type': 'Organization', name: BRAND.nameKo },
+  url: new URL(`/events/${promotion.id}`, Astro.site).href,
+};
+---
+
+<BaseLayout
+  title={title}
+  description={subtitle ?? `${BRAND.nameKo} 이벤트 — ${title}`}
+  image={thumbnail}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(offerSchema)} slot="head" />
+
+  <article class="section">
+    <div class="wrap">
+      <nav class="crumb" aria-label="경로">
+        <a href="/events">이벤트</a> <span aria-hidden="true">/</span> <span>{title}</span>
+      </nav>
+
+      <header class="event-head" data-accent={accent}>
+        {badge && <span class="event-head__badge">{badge}</span>}
+        {subtitle && <p class="event-head__subtitle">{subtitle}</p>}
+        <h1 class="event-head__title">{title}</h1>
+        {period && <p class="event-head__period">{period}</p>}
+      </header>
+
+      {cards.length > 0 && (
+        <ol class="cardnews">
+          {cards.map((card, index) => (
+            <li class="cardnews__item" data-accent={index % 2 === 0 ? accent : 'plain'}>
+              <span class="cardnews__num">{String(index + 1).padStart(2, '0')}</span>
+              <div class="cardnews__body">
+                <h2 class="cardnews__heading">{card.heading}</h2>
+                {card.body && <p class="cardnews__text">{card.body}</p>}
+              </div>
+              {card.image && <img class="cardnews__image" src={card.image} alt="" loading="lazy" />}
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div class="event-cta">
+        {booking ? (
+          <a href={booking.href} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
+            {booking.label}
+          </a>
+        ) : (
+          <a href="/branches" class="btn btn--primary">지점별 예약 문의</a>
+        )}
+        <a href="/events" class="btn btn--outline">다른 이벤트 보기</a>
+      </div>
+
+      <div class="event-notice prose"><Content /></div>
+
+      {others.length > 0 && (
+        <section class="event-others">
+          <h2 class="event-others__title">진행 중인 다른 이벤트</h2>
+          <div class="grid grid--3">
+            {others.map((p) => <EventCard promotion={p} />)}
+          </div>
+        </section>
+      )}
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .crumb { font-size: 0.875rem; color: var(--ink-faint); margin-bottom: 28px; }
+  .crumb a { text-decoration: none; }
+  .crumb a:hover { color: var(--blue); }
+
+  .event-head {
+    padding: 44px 32px;
+    border-radius: var(--radius);
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  .event-head[data-accent='blue'] { background: var(--blue); color: var(--white); }
+  .event-head[data-accent='olive'] { background: var(--olive); color: var(--white); }
+  .event-head[data-accent='tan'] { background: var(--tan); color: #3f3a2c; }
+  .event-head[data-accent='sand'] { background: var(--sand); color: #3f3a2c; }
+
+  .event-head__badge {
+    display: inline-block;
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em;
+    padding: 5px 12px; border-radius: 999px;
+    background: rgb(255 255 255 / 0.85); color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .event-head__subtitle { margin: 0 0 6px; font-size: 0.9375rem; opacity: 0.88; }
+  .event-head__title {
+    font-size: clamp(1.75rem, 6vw, 2.75rem);
+    line-height: 1.25; color: inherit;
+  }
+  .event-head__period { margin: 12px 0 0; font-size: 0.875rem; opacity: 0.85; }
+
+  /* 카드뉴스 — 한 장씩 세로로 넘겨 읽는 형태 */
+  .cardnews { list-style: none; display: grid; gap: 14px; margin-bottom: 44px; }
+  @media (min-width: 760px) { .cardnews { gap: 18px; } }
+
+  .cardnews__item {
+    position: relative;
+    display: grid;
+    gap: 16px;
+    padding: 36px 28px;
+    border-radius: var(--radius);
+    background: var(--white);
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  @media (min-width: 760px) { .cardnews__item { padding: 52px 48px; } }
+
+  .cardnews__item[data-accent='blue'] { background: var(--blue); color: var(--white); border-color: transparent; }
+  .cardnews__item[data-accent='olive'] { background: var(--olive); color: var(--white); border-color: transparent; }
+  .cardnews__item[data-accent='tan'] { background: var(--tan); color: #3f3a2c; border-color: transparent; }
+  .cardnews__item[data-accent='sand'] { background: var(--sand); color: #3f3a2c; border-color: transparent; }
+
+  .cardnews__num {
+    font-size: 0.875rem; font-weight: 700;
+    letter-spacing: 0.14em; opacity: 0.55;
+  }
+  .cardnews__heading {
+    font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+    line-height: 1.35; color: inherit;
+    margin-bottom: 10px;
+  }
+  .cardnews__text { margin: 0; font-size: 1rem; line-height: 1.75; opacity: 0.9; }
+  .cardnews__image { border-radius: var(--radius); margin-top: 8px; }
+
+  .event-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 48px; }
+
+  .event-notice { max-width: 700px; }
+
+  .event-others { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--line); }
+  .event-others__title { font-size: 1.25rem; margin-bottom: 24px; color: var(--olive); }
+</style>

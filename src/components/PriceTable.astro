@@ -1,0 +1,92 @@
+---
+/**
+ * 지점별 시술 가격표.
+ *
+ * 관리자가 /admin → 사이트 설정 → 지점별 정보 에서 '가격표 보이기' 를 끄면
+ * 이 영역이 통째로 사라진다. 가격 항목이 하나도 없어도 마찬가지다.
+ */
+import { groupPrices } from '../config';
+import type { Branch } from '../config';
+
+interface Props { branch: Branch; }
+const { branch } = Astro.props;
+
+const show = branch.showPrices && branch.prices.length > 0;
+const groups = show ? groupPrices(branch.prices) : [];
+---
+
+{show && (
+  <section class="prices">
+    <h2 class="prices__title">시술 가격</h2>
+
+    <div class="prices__groups">
+      {groups.map((group) => (
+        <div class="price-group">
+          <h3 class="price-group__name">{group.category}</h3>
+          <dl class="price-group__list">
+            {group.items.map((item) => (
+              <div class="price-row">
+                <dt>{item.name}</dt>
+                <dd>{item.price}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ))}
+    </div>
+
+    {branch.priceNote && <p class="prices__note">{branch.priceNote}</p>}
+  </section>
+)}
+
+<style>
+  .prices { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); }
+
+  .prices__title {
+    font-size: 1.125rem;
+    color: var(--olive);
+    margin-bottom: 24px;
+  }
+
+  .prices__groups { display: grid; gap: 28px; }
+  @media (min-width: 760px) {
+    .prices__groups { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  }
+
+  .price-group__name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--white);
+    background: var(--olive);
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+  }
+
+  .price-group__list { margin: 0; display: grid; }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .price-row:last-child { border-bottom: 0; }
+  .price-row dt { font-size: 0.9375rem; }
+  .price-row dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .prices__note {
+    margin: 24px 0 0;
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+  }
+</style>

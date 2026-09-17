@@ -10,6 +10,9 @@
 
 import siteSettings from '../content/settings/site.json';
 import branchSettings from '../content/settings/branches.json';
+import homeSettings from '../content/settings/home.json';
+import pageSettings from '../content/settings/pages.json';
+import promotionSettings from '../content/settings/promotion.json';
 
 /** 인스타그램 주소에서 표시용 아이디(@handle)를 뽑는다. 관리자가 두 번 입력하지 않도록. */
 function instagramHandleOf(url: string): string {
@@ -21,22 +24,32 @@ export const BRAND = {
   // 브랜드 정체성 — 거의 바뀌지 않으므로 코드에 둔다
   nameKo: 'SJ뷰티헤어',
   nameEn: 'SJ BEAUTY HAIR',
-  tagline: '대전의 오늘을 가장 먼저 입는 헤어',
-  description:
-    '2016년 둔산본점에서 시작해 대전 5개 지점으로 성장한 미용실 브랜드입니다. 최신 스타일과 트렌드를 반영한 시술, 그리고 꾸준한 교육으로 다져진 디자이너가 함께합니다.',
-
-  // 아래는 /admin → 사이트 설정 → 연락처·영업시간 에서 바뀐다
+  // 아래는 전부 /admin → 사이트 설정 에서 바뀐다
+  tagline: siteSettings.tagline,
+  description: siteSettings.description,
   instagram: siteSettings.instagram,
   instagramHandle: instagramHandleOf(siteSettings.instagram),
   email: siteSettings.email,
   /** 비어 있으면 헤더·푸터의 전화 버튼이 숨겨진다. */
   phone: siteSettings.phone,
+  /** 브랜드 대표 예약 링크. 지점 링크가 없을 때 히어로·팝업 버튼이 이걸 쓴다. */
+  naverBooking: siteSettings.naverBooking,
+  naverPlace: siteSettings.naverPlace,
   hours: {
     open: siteSettings.hoursOpen,
     close: siteSettings.hoursClose,
     note: siteSettings.hoursNote,
   },
 };
+
+/** 메인 화면 문구·사진. /admin → 사이트 설정 → 메인 화면 */
+export const HOME = homeSettings;
+
+/** 각 페이지 문구. /admin → 사이트 설정 → 페이지 문구 */
+export const PAGES = pageSettings;
+
+/** 띠배너·팝업. /admin → 사이트 설정 → 띠배너·팝업 */
+export const PROMO = promotionSettings;
 
 /**
  * 검색엔진 사이트 등록용 인증 코드.
@@ -55,6 +68,13 @@ export const VERIFICATION = {
   google: '',
 } as const;
 
+/** 가격 한 줄. 금액은 '80,000원~', '상담 후 결정' 처럼 자유롭게 적을 수 있게 문자열로 둔다. */
+export type PriceItem = {
+  category: string;
+  name: string;
+  price: string;
+};
+
 export type Branch = {
   slug: string;
   name: string;
@@ -66,6 +86,12 @@ export type Branch = {
   naverBooking: string;
   /** 네이버 지도 장소 주소. 비워두면 주소 검색 링크로 대체된다. */
   naverMap: string;
+  /** 네이버 플레이스 주소. 예약 전용 주소가 아직 없을 때 예약 버튼이 여기로 간다. */
+  naverPlace: string;
+  /** 끄면 지점 페이지에서 가격표가 통째로 사라진다. */
+  showPrices: boolean;
+  priceNote: string;
+  prices: PriceItem[];
   photo: string;
   isFlagship?: boolean;
   /** 주소에서 그대로 뽑은 자치구. 지역 검색 노출에 쓴다. 예) '서구' */
@@ -78,7 +104,11 @@ export type Branch = {
  * 지점의 '구조' 정보. PDF 기업소개서 4페이지 기준이며 주소·오픈일은 확정 사실이다.
  * 전화번호·예약 링크·지도 링크는 여기에 두지 않는다 — 아래에서 JSON 값으로 채운다.
  */
-const BRANCH_BASE: Omit<Branch, 'phone' | 'naverBooking' | 'naverMap'>[] = [
+/** 관리자가 /admin 에서 채우는 항목들. 여기 목록과 아래 병합부가 짝을 이룬다. */
+type EditableBranchFields = 'phone' | 'naverBooking' | 'naverMap' | 'naverPlace'
+  | 'showPrices' | 'priceNote' | 'prices';
+
+const BRANCH_BASE: Omit<Branch, EditableBranchFields>[] = [
   {
     slug: 'dunsan',
     name: '둔산본점',
@@ -141,6 +171,10 @@ export const BRANCHES: Branch[] = BRANCH_BASE.map((base) => {
     phone: edited?.phone ?? '',
     naverBooking: edited?.naverBooking ?? '',
     naverMap: edited?.naverMap ?? '',
+    naverPlace: edited?.naverPlace ?? '',
+    showPrices: edited?.showPrices ?? false,
+    priceNote: edited?.priceNote ?? '',
+    prices: edited?.prices ?? [],
   };
 });
 
@@ -192,9 +226,49 @@ export const NAV = [
   { href: '/videos', label: '영상' },
   { href: '/contact', label: '문의' },
   { href: '/recruit', label: '채용' },
+  { href: '/events', label: '이벤트' },
 ] as const;
 
 /** 네이버 지도에서 지점을 찾는 링크. 등록된 장소 주소가 있으면 그것을 쓴다. */
 export function mapUrl(branch: Branch): string {
   return branch.naverMap || `https://map.naver.com/p/search/${encodeURIComponent(branch.address)}`;
+}
+
+/**
+ * 예약 버튼이 어디로 갈지, 뭐라고 쓸지 한 곳에서 정한다.
+ *
+ * 예약 전용 주소(naverBooking)가 가장 정확하지만 아직 없다.
+ * 그동안은 네이버 플레이스로 보낸다 — 거기서 고객이 예약 버튼을 누를 수 있다.
+ * 둘 다 없으면 버튼을 만들지 않고, 부르는 쪽에서 문의 수단으로 대체한다.
+ *
+ * branch 를 넘기지 않으면 브랜드 대표 링크를 본다.
+ */
+export function bookingLink(branch?: Branch): { href: string; label: string } | null {
+  const direct = branch?.naverBooking || BRAND.naverBooking;
+  if (direct) return { href: direct, label: '네이버 예약' };
+
+  const place = branch?.naverPlace || BRAND.naverPlace;
+  if (place) return { href: place, label: '네이버 예약·문의' };
+
+  return null;
+}
+
+/** 평평한 가격 목록을 화면에 보여줄 순서대로 카테고리별로 묶는다. */
+export function groupPrices(prices: PriceItem[]): { category: string; items: PriceItem[] }[] {
+  const order = ['펌', '염색', '커트'];
+  const groups = new Map<string, PriceItem[]>();
+
+  for (const item of prices) {
+    const key = item.category || '기타';
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => {
+      // 지정한 순서를 먼저, 나머지는 입력한 순서대로 뒤에 붙인다.
+      const ia = order.indexOf(a);
+      const ib = order.indexOf(b);
+      return (ia === -1 ? order.length : ia) - (ib === -1 ? order.length : ib);
+    })
+    .map(([category, items]) => ({ category, items }));
 }

@@ -2,7 +2,8 @@
 # 글 관리 화면 설정
 #
 # 여기 적힌 항목이 /admin 화면의 입력칸이 된다.
-# 항목을 늘리고 싶으면 fields 아래에 같은 모양으로 한 줄씩 추가하면 된다.
+# 주의: 여기에 적지 않은 항목은 저장할 때 파일에서 사라진다.
+#       그래서 지점 주소·사진·자치구 같은 구조 정보는 src/config.ts 에 둔다.
 # ─────────────────────────────────────────────────────────────
 
 backend:
@@ -12,18 +13,17 @@ backend:
   base_url: https://sj-beauty-hair.vercel.app
   auth_endpoint: api/auth
 
-# 글에 넣는 사진이 저장되는 곳
 media_folder: public/uploads
 public_folder: /uploads
 
 locale: ko
 
-# 저장 버튼을 누르면 GitHub 에 이런 문구로 기록이 남는다
 site_url: https://sj-beauty-hair.vercel.app
 display_url: https://sj-beauty-hair.vercel.app
 logo_url: https://sj-beauty-hair.vercel.app/logo.png
 
 collections:
+  # ── 헤어칼럼 ────────────────────────────────────────────────
   - name: posts
     label: 헤어칼럼
     label_singular: 글
@@ -62,6 +62,7 @@ collections:
         default: false
       - { name: body, label: 본문, widget: markdown }
 
+  # ── 영상 ────────────────────────────────────────────────────
   - name: videos
     label: 영상
     label_singular: 영상
@@ -77,6 +78,11 @@ collections:
         widget: string
         hint: "유튜브 주소 끝의 11자리입니다. 예) https://youtu.be/AbCdEfGhIjK → AbCdEfGhIjK"
         pattern: ['^[A-Za-z0-9_-]{11}$', '유튜브 코드 11자리를 정확히 입력해 주세요.']
+      - name: thumbnail
+        label: 대표 이미지
+        widget: image
+        required: false
+        hint: 목록에 보일 사진입니다. 올리지 않으면 유튜브가 만든 썸네일이 대신 쓰입니다. 누르면 유튜브로 이동합니다.
       - { name: date, label: 등록일, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false, format: 'YYYY-MM-DD' }
       - { name: description, label: 설명, widget: text, required: false }
       - name: draft
@@ -85,10 +91,60 @@ collections:
         default: false
       - { name: body, label: 메모, widget: markdown, required: false }
 
-  # ── 사이트 설정 ──────────────────────────────────────────────
-  # 폴더에 글을 쌓는 위 컬렉션과 달리, 정해진 파일 하나를 양식으로 편집한다.
-  # 주의: 여기에 적지 않은 항목은 저장할 때 파일에서 사라진다.
-  #       그래서 구조 정보(주소·사진·자치구)는 이 파일이 아니라 src/config.ts 에 둔다.
+  # ── 이벤트 ──────────────────────────────────────────────────
+  - name: promotions
+    label: 이벤트·프로모션
+    label_singular: 이벤트
+    description: 할인·혜택 안내입니다. 카드뉴스 형태로 보여집니다.
+    folder: content/promotions
+    create: true
+    slug: '{{slug}}'
+    sortable_fields: [order, title]
+    fields:
+      - { name: title, label: 이벤트 이름, widget: string }
+      - { name: subtitle, label: 한 줄 설명, widget: string, required: false }
+      - name: badge
+        label: 딱지 문구
+        widget: string
+        required: false
+        hint: "카드 위에 붙는 작은 표시입니다. 예) 상시, 10월 한정"
+      - { name: period, label: 진행 기간, widget: string, required: false, hint: "예) 상시 진행, 10월 1일 ~ 10월 31일" }
+      - name: accent
+        label: 배경 색
+        widget: select
+        options:
+          - { label: '파랑', value: 'blue' }
+          - { label: '베이지', value: 'tan' }
+          - { label: '모래', value: 'sand' }
+          - { label: '올리브', value: 'olive' }
+        default: blue
+      - name: thumbnail
+        label: 대표 사진
+        widget: image
+        required: false
+        hint: 올리면 색 대신 사진이 카드 배경이 됩니다.
+      - name: order
+        label: 표시 순서
+        widget: number
+        value_type: int
+        default: 10
+        hint: 숫자가 작을수록 앞에 나옵니다.
+      - name: cards
+        label: 카드뉴스
+        widget: list
+        summary: '{{fields.heading}}'
+        hint: 한 장에 한 가지만 담으세요. 짧을수록 잘 읽힙니다.
+        fields:
+          - { name: heading, label: 카드 제목, widget: string }
+          - { name: body, label: 카드 내용, widget: text, required: false }
+          - { name: image, label: 카드 사진, widget: image, required: false }
+      - name: draft
+        label: 작성 중 (체크하면 홈페이지에 보이지 않습니다)
+        widget: boolean
+        default: false
+      - { name: body, label: 이용 안내 (주의사항 등), widget: markdown, required: false }
+
+  # ── 사이트 설정 ─────────────────────────────────────────────
   - name: settings
     label: 사이트 설정
     files:
@@ -97,6 +153,8 @@ collections:
         file: content/settings/site.json
         format: json
         fields:
+          - { name: tagline, label: 브랜드 카피, widget: string, hint: 메인 화면 맨 위 큰 글자입니다. }
+          - { name: description, label: 브랜드 소개글, widget: text }
           - { name: email, label: 대표 이메일, widget: string }
           - name: instagram
             label: 인스타그램 주소
@@ -107,12 +165,22 @@ collections:
             widget: string
             required: false
             hint: 비워두면 홈페이지에 전화 버튼이 나타나지 않습니다.
+          - name: naverBooking
+            label: 대표 네이버 예약 주소
+            widget: string
+            required: false
+            hint: 예약 전용 주소가 있으면 여기에 넣으세요. 가장 우선 적용됩니다.
+          - name: naverPlace
+            label: 대표 네이버 플레이스 주소
+            widget: string
+            required: false
+            hint: 예약 전용 주소가 없을 때 예약 버튼이 여기로 연결됩니다.
           - { name: hoursOpen, label: 영업 시작 시각, widget: string, hint: '예) 10:00' }
           - { name: hoursClose, label: 영업 종료 시각, widget: string, hint: '예) 20:30' }
           - { name: hoursNote, label: 휴무 안내, widget: string, hint: '예) 연중무휴 (명절 휴무)' }
 
       - name: branches
-        label: 지점별 전화 · 예약 링크
+        label: 지점별 정보
         file: content/settings/branches.json
         format: json
         fields:
@@ -130,9 +198,129 @@ collections:
                 label: 네이버 예약 주소
                 widget: string
                 required: false
-                hint: 주소를 넣으면 메인과 지점 페이지에 예약 버튼이 자동으로 나타납니다.
+                hint: 예약 전용 주소입니다. 넣으면 '네이버 예약' 버튼이 이 주소로 갑니다.
+              - name: naverPlace
+                label: 네이버 플레이스 주소
+                widget: string
+                required: false
+                hint: 예약 전용 주소가 없을 때 예약 버튼이 여기로 연결됩니다.
               - name: naverMap
                 label: 네이버 지도 주소
                 widget: string
                 required: false
                 hint: 비워두면 주소로 검색하는 링크가 대신 쓰입니다.
+              - name: showPrices
+                label: 가격표 보이기
+                widget: boolean
+                default: false
+                hint: 끄면 이 지점 페이지에서 가격표가 사라집니다.
+              - name: priceNote
+                label: 가격표 아래 안내문
+                widget: text
+                required: false
+              - name: prices
+                label: 가격 항목
+                widget: list
+                required: false
+                summary: '{{fields.category}} · {{fields.name}} — {{fields.price}}'
+                hint: 분류를 펌·염색·커트로 적으면 그 순서대로 묶여 보입니다.
+                fields:
+                  - name: category
+                    label: 분류
+                    widget: select
+                    options: ['펌', '염색', '커트', '클리닉', '스타일링', '기타']
+                    default: 펌
+                  - { name: name, label: 시술명, widget: string, hint: '예) 일반 펌, 뿌리 염색' }
+                  - { name: price, label: 금액, widget: string, hint: "'80,000원~', '상담 후 결정' 처럼 자유롭게 적으셔도 됩니다." }
+
+      - name: home
+        label: 메인 화면
+        file: content/settings/home.json
+        format: json
+        fields:
+          - { name: heroEyebrow, label: 카피 위 작은 글자, widget: string, hint: '예) Daejeon · Since 2016' }
+          - { name: heroImage, label: 메인 배경 사진, widget: image, required: false }
+          - { name: primaryCtaText, label: 예약 버튼 문구, widget: string, default: 예약하기 }
+          - { name: secondaryCtaText, label: 보조 버튼 문구, widget: string, default: 지점 찾기 }
+          - { name: secondaryCtaLink, label: 보조 버튼 주소, widget: string, default: /branches }
+          - name: stats
+            label: 숫자 소개
+            widget: list
+            summary: '{{fields.label}} {{fields.value}}'
+            fields:
+              - { name: label, label: 항목, widget: string }
+              - { name: value, label: 값, widget: string }
+          - { name: stylesTitle, label: 대표 시술 제목, widget: string }
+          - name: styles
+            label: 대표 시술
+            widget: list
+            summary: '{{fields.name}}'
+            hint: 카피 바로 아래에 나옵니다. 사진을 올리면 사진 카드가 되고, 없으면 브랜드 색으로 표시됩니다.
+            fields:
+              - { name: name, label: 시술명, widget: string, hint: '예) 펌, 염색, 커트, 붙임머리' }
+              - { name: english, label: 영문 표기, widget: string, required: false, hint: '예) PERM' }
+              - { name: description, label: 한 줄 설명, widget: string, required: false }
+              - { name: image, label: 사진, widget: image, required: false }
+              - { name: link, label: 눌렀을 때 갈 주소, widget: string, required: false }
+          - { name: branchesTitle, label: 지점 섹션 제목, widget: string }
+          - { name: branchesDesc, label: 지점 섹션 설명, widget: string }
+          - { name: eventsTitle, label: 이벤트 섹션 제목, widget: string }
+          - { name: eventsDesc, label: 이벤트 섹션 설명, widget: string }
+          - { name: blogTitle, label: 칼럼 섹션 제목, widget: string }
+          - { name: blogDesc, label: 칼럼 섹션 설명, widget: string }
+          - { name: videosTitle, label: 영상 섹션 제목, widget: string }
+          - { name: videosDesc, label: 영상 섹션 설명, widget: string }
+
+      - name: pages
+        label: 페이지 문구
+        file: content/settings/pages.json
+        format: json
+        fields:
+          - { name: aboutTitle, label: '[브랜드] 제목', widget: string }
+          - name: aboutBody
+            label: '[브랜드] 소개 본문'
+            widget: text
+            hint: 빈 줄 하나를 사이에 두면 문단이 나뉩니다.
+          - { name: aboutImage, label: '[브랜드] 사진', widget: image, required: false }
+          - { name: branchesTitle, label: '[지점안내] 제목', widget: string }
+          - { name: branchesDesc, label: '[지점안내] 설명', widget: string }
+          - { name: blogTitle, label: '[헤어칼럼] 제목', widget: string }
+          - { name: videosTitle, label: '[영상] 제목', widget: string }
+          - { name: eventsTitle, label: '[이벤트] 제목', widget: string }
+          - { name: eventsDesc, label: '[이벤트] 설명', widget: string }
+          - { name: contactTitle, label: '[문의] 제목', widget: string }
+          - { name: contactFormTitle, label: '[문의] 폼 제목', widget: string }
+          - { name: contactFormHint, label: '[문의] 폼 안내문', widget: text }
+          - { name: recruitTitle, label: '[채용] 교육과정 제목', widget: string }
+          - { name: recruitDesc, label: '[채용] 교육과정 설명', widget: string }
+          - { name: recruitLead, label: '[채용] 교육과정 본문', widget: text }
+          - { name: workplaceTitle, label: '[채용] 근무환경 제목', widget: string }
+          - { name: recruitCtaText, label: '[채용] 지원 안내문', widget: string }
+
+      - name: promotion
+        label: 띠배너 · 팝업
+        file: content/settings/promotion.json
+        format: json
+        fields:
+          - name: bannerEnabled
+            label: 띠배너 사용
+            widget: boolean
+            default: true
+            hint: 모든 페이지 맨 위에 가로 띠로 표시됩니다.
+          - { name: bannerText, label: 띠배너 문구, widget: string, required: false }
+          - { name: bannerLinkText, label: 띠배너 버튼 문구, widget: string, required: false, default: 자세히 보기 }
+          - name: bannerLink
+            label: 띠배너 주소
+            widget: string
+            required: false
+            hint: "홈페이지 안의 주소를 넣으세요. 예) /events/first-visit"
+          - name: popupEnabled
+            label: 팝업 사용
+            widget: boolean
+            default: true
+            hint: 하루에 한 번만 뜹니다. 방문자가 '오늘 하루 보지 않기'를 누르면 그날은 다시 뜨지 않습니다.
+          - { name: popupTitle, label: 팝업 제목, widget: string, required: false }
+          - { name: popupText, label: 팝업 내용, widget: text, required: false }
+          - { name: popupImage, label: 팝업 사진, widget: image, required: false }
+          - { name: popupLinkText, label: 팝업 버튼 문구, widget: string, required: false, default: 자세히 보기 }
+          - { name: popupLink, label: 팝업 버튼 주소, widget: string, required: false }

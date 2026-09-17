@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EventCard from '../../components/EventCard.astro';
+import BookingCTA from '../../components/BookingCTA.astro';
+import { publishedPromotions } from '../../lib/content';
+import { PAGES } from '../../config';
+
+const promotions = await publishedPromotions();
+---
+
+<BaseLayout
+  title={PAGES.eventsTitle}
+  description="SJ뷰티헤어에서 지금 받으실 수 있는 할인과 혜택 안내."
+>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">08</span>
+        <h1 class="section-head__title">{PAGES.eventsTitle}</h1>
+        <p class="section-head__desc">{PAGES.eventsDesc}</p>
+      </div>
+
+      {promotions.length > 0 ? (
+        <div class="grid grid--3">
+          {promotions.map((promotion) => <EventCard promotion={promotion} />)}
+        </div>
+      ) : (
+        <p class="empty">준비 중인 이벤트가 있습니다.</p>
+      )}
+    </div>
+  </section>
+
+  <BookingCTA />
+</BaseLayout>
+
+<style>
+  .empty { color: var(--ink-faint); }
+</style>

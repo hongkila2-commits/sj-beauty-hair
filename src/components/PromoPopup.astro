@@ -1,0 +1,145 @@
+---
+/**
+ * 이벤트 안내 팝업. 하루에 한 번만 뜬다.
+ *
+ * '오늘 하루 보지 않기'를 누르면 그날 날짜를 브라우저에 저장하고, 날이 바뀌면 다시 뜬다.
+ * 시크릿 모드처럼 저장이 막힌 환경에서는 저장만 실패하고 팝업은 정상 동작한다.
+ * 관리자가 끄면 이 파일이 만들어내는 HTML·스크립트가 아예 나가지 않는다.
+ */
+import { PROMO } from '../config';
+
+const show = PROMO.popupEnabled && PROMO.popupTitle;
+---
+
+{show && (
+  <div class="promo" id="promo-popup" hidden>
+    <div class="promo__backdrop" data-promo-close></div>
+
+    <div class="promo__panel" role="dialog" aria-modal="true" aria-labelledby="promo-title">
+      <button type="button" class="promo__x" data-promo-close aria-label="닫기">×</button>
+
+      {PROMO.popupImage && (
+        <img class="promo__image" src={PROMO.popupImage} alt="" />
+      )}
+
+      <div class="promo__body">
+        <p class="promo__eyebrow">EVENT</p>
+        <h2 class="promo__title" id="promo-title">{PROMO.popupTitle}</h2>
+        {PROMO.popupText && <p class="promo__text">{PROMO.popupText}</p>}
+
+        {PROMO.popupLink && (
+          <a href={PROMO.popupLink} class="btn btn--primary promo__cta">
+            {PROMO.popupLinkText || '자세히 보기'}
+          </a>
+        )}
+      </div>
+
+      <div class="promo__foot">
+        <button type="button" class="promo__today" data-promo-dismiss>오늘 하루 보지 않기</button>
+        <button type="button" class="promo__close" data-promo-close>닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const KEY = 'sj-promo-hidden-until';
+      const popup = document.getElementById('promo-popup');
+      if (!popup) return;
+
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+
+      // 저장이 막힌 브라우저에서도 화면이 깨지지 않도록 읽기·쓰기를 모두 감싼다.
+      const read = () => {
+        try { return localStorage.getItem(KEY); } catch { return null; }
+      };
+      const write = (value: string) => {
+        try { localStorage.setItem(KEY, value); } catch { /* 저장 불가 — 무시 */ }
+      };
+
+      if (read() === today) return;
+
+      let lastFocused: HTMLElement | null = null;
+
+      const open = () => {
+        lastFocused = document.activeElement as HTMLElement | null;
+        popup.hidden = false;
+        document.body.style.overflow = 'hidden';
+        popup.querySelector<HTMLElement>('.promo__x')?.focus();
+      };
+
+      const close = () => {
+        popup.hidden = true;
+        document.body.style.overflow = '';
+        lastFocused?.focus();
+      };
+
+      popup.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest('[data-promo-dismiss]')) { write(today); close(); return; }
+        if (target.closest('[data-promo-close]')) close();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !popup.hidden) close();
+      });
+
+      open();
+    })();
+  </script>
+)}
+
+<style>
+  .promo {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .promo[hidden] { display: none; }
+
+  .promo__backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 0.45); }
+
+  .promo__panel {
+    position: relative;
+    width: 100%; max-width: 380px;
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    background: var(--ivory);
+    border-radius: var(--radius);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 0.22);
+  }
+
+  .promo__x {
+    position: absolute; top: 8px; right: 10px;
+    width: 34px; height: 34px;
+    border: 0; background: none; cursor: pointer;
+    font-size: 1.6rem; line-height: 1; color: var(--ink-soft);
+  }
+  .promo__x:hover { color: var(--ink); }
+
+  .promo__image { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+
+  .promo__body { padding: 32px 28px 24px; }
+
+  .promo__eyebrow {
+    margin: 0 0 8px;
+    font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.22em; color: var(--blue);
+  }
+  .promo__title { font-size: 1.5rem; line-height: 1.3; margin-bottom: 10px; }
+  .promo__text { margin: 0; color: var(--ink-soft); font-size: 0.9375rem; }
+  .promo__cta { margin-top: 22px; width: 100%; }
+
+  .promo__foot {
+    display: flex; justify-content: space-between;
+    border-top: 1px solid var(--line);
+  }
+  .promo__today, .promo__close {
+    flex: 1;
+    padding: 14px;
+    border: 0; background: none; cursor: pointer;
+    font: inherit; font-size: 0.8125rem; color: var(--ink-faint);
+  }
+  .promo__today { border-right: 1px solid var(--line); }
+  .promo__today:hover, .promo__close:hover { color: var(--ink); background: var(--sand); }
+</style>

@@ -1,10 +1,11 @@
 ---
 import type { Branch } from '../config';
-import { mapUrl } from '../config';
+import { mapUrl, bookingLink } from '../config';
 
 interface Props { branch: Branch; }
 const { branch } = Astro.props;
 const [year, month] = branch.openedAt.split('-');
+const booking = bookingLink(branch);
 ---
 
 <article class="branch-card card">
@@ -18,15 +19,26 @@ const [year, month] = branch.openedAt.split('-');
     </h3>
     <p class="branch-card__address">{branch.address}</p>
     <p class="branch-card__meta">대전 {branch.district} · {year}년 {Number(month)}월 오픈</p>
+
+    <div class="branch-card__cta">
+      {booking ? (
+        <a href={booking.href} target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--block">
+          {booking.label}
+        </a>
+      ) : branch.phone ? (
+        <a href={`tel:${branch.phone.replace(/-/g, '')}`} class="btn btn--primary btn--block">
+          전화 예약 {branch.phone}
+        </a>
+      ) : (
+        <a href={`/branches/${branch.slug}`} class="btn btn--primary btn--block">예약 문의</a>
+      )}
+    </div>
+
     <div class="branch-card__actions">
       <a href={mapUrl(branch)} target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
         길찾기 →
       </a>
-      {branch.naverBooking && (
-        <a href={branch.naverBooking} target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
-          네이버 예약 →
-        </a>
-      )}
+      <a href={`/branches/${branch.slug}`} class="btn btn--ghost">지점 상세 →</a>
     </div>
   </div>
 </article>
@@ -46,9 +58,13 @@ const [year, month] = branch.openedAt.split('-');
   }
   .branch-card__address { margin: 0; font-size: 0.9375rem; color: var(--ink-soft); }
   .branch-card__meta { margin: 0; font-size: 0.8125rem; color: var(--ink-faint); }
+
+  /* 예약 버튼은 카드 안에서 가장 눈에 띄는 자리에 둔다 */
+  .branch-card__cta { margin-top: auto; padding-top: 16px; }
+
   .branch-card__actions {
-    margin-top: auto; padding-top: 12px;
     display: flex; gap: 16px; flex-wrap: wrap;
+    padding-top: 10px;
     font-size: 0.875rem;
   }
 </style>

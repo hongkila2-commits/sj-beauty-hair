@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BookingCTA from '../components/BookingCTA.astro';
-import { BRAND, COMPANY } from '../config';
+import { BRAND, COMPANY, PAGES } from '../config';
+
+/** 관리자가 줄바꿈 두 번으로 나눈 문단을 그대로 살린다. */
+const aboutParagraphs = PAGES.aboutBody.split(/\n\s*\n/).filter(Boolean);
 ---
 
 <BaseLayout
@@ -12,24 +15,15 @@ import { BRAND, COMPANY } from '../config';
     <div class="wrap">
       <div class="section-head">
         <span class="section-head__num">01</span>
-        <h1 class="section-head__title">회사소개</h1>
+        <h1 class="section-head__title">{PAGES.aboutTitle}</h1>
       </div>
 
       <div class="about">
         <div class="about__story prose">
-          <p>
-            SJ뷰티헤어는 2016년 본점 설립 이래, 고객 여러분께 최고 품질의 미용 서비스와 최신 기술을
-            제공하기 위해 끊임없이 노력해왔습니다. 현재 저희는 대전을 대표하는 브랜드로서
-            자리매김하며, 고객의 다양한 요구를 충족시키기 위해 최선을 다하고 있습니다.
-          </p>
-          <p>
-            지속적인 교육과 소통을 통해 전문가로서의 역량을 강화하고, 구성원과 함께 성장하며,
-            항상 최신 스타일과 트렌드를 반영한 서비스를 제공하는 데 주력하고 있습니다.
-          </p>
-          <p>
-            미래에도 SJ뷰티헤어는 지속적인 발전과 성장을 통해 고객에게 긍정적인 변화와 특별한
-            뷰티 경험을 선사하는 여정에 함께 나아가겠습니다.
-          </p>
+          {aboutParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+          {PAGES.aboutImage && (
+            <img class="about__image" src={PAGES.aboutImage} alt="" loading="lazy" />
+          )}
         </div>
 
         <dl class="about__facts">
@@ -54,6 +48,8 @@ import { BRAND, COMPANY } from '../config';
 <style>
   .about { display: grid; gap: 40px; }
   @media (min-width: 900px) { .about { grid-template-columns: 1.4fr 1fr; gap: 64px; } }
+
+  .about__image { margin-top: 28px; border-radius: var(--radius); }
 
   .about__facts { margin: 0; display: grid; gap: 0; align-content: start; }
   .about__fact {

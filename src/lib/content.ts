@@ -6,6 +6,12 @@ export async function publishedPosts() {
   return posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 }
 
+/** 발행된 이벤트만 지정한 순서대로 돌려준다. */
+export async function publishedPromotions() {
+  const promotions = await getCollection('promotions', ({ data }) => !data.draft);
+  return promotions.sort((a, b) => a.data.order - b.data.order);
+}
+
 /** 발행된 영상만 최신순으로 돌려준다. */
 export async function publishedVideos() {
   const videos = await getCollection('videos', ({ data }) => !data.draft);

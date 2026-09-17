@@ -1,0 +1,124 @@
+---
+/**
+ * 대표 시술 카드 (펌 · 염색 · 커트 · 붙임머리).
+ * 브랜드 카피 바로 아래에 놓여 "여기서 뭘 하는 곳인지"를 한눈에 보여준다.
+ *
+ * 사진을 올리면 사진 카드가 되고, 없으면 브랜드 색면으로 대신한다.
+ * 관리자가 /admin → 사이트 설정 → 메인 화면 에서 이름·사진·설명·링크를 바꾼다.
+ */
+import { HOME } from '../config';
+
+const styles = HOME.styles.filter((s) => s.name);
+/** 사진이 없을 때 돌려 쓰는 브랜드 색. 카드마다 다른 색이 오도록 순서대로 배정한다. */
+const TONES = ['tan', 'blue', 'sand', 'olive'] as const;
+---
+
+{styles.length > 0 && (
+  <section class="styles" aria-label={HOME.stylesTitle}>
+    <ul class="styles__list">
+      {styles.map((style, index) => {
+        const Tag = style.link ? 'a' : 'div';
+        const tone = TONES[index % TONES.length];
+        return (
+          <li>
+            <Tag
+              class="style-card"
+              data-tone={style.image ? undefined : tone}
+              {...(style.link ? { href: style.link } : {})}
+            >
+              {style.image && (
+                <img class="style-card__photo" src={style.image} alt="" loading="lazy" />
+              )}
+              <span class="style-card__body">
+                {style.english && <span class="style-card__en">{style.english}</span>}
+                <span class="style-card__name">{style.name}</span>
+                {style.description && (
+                  <span class="style-card__desc">{style.description}</span>
+                )}
+              </span>
+            </Tag>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+)}
+
+<style>
+  .styles { padding-bottom: 8px; }
+
+  .styles__list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (min-width: 760px) {
+    .styles__list { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  }
+
+  .style-card {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 168px;
+    padding: 18px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--white);
+    border: 1px solid var(--line);
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+  @media (min-width: 760px) { .style-card { min-height: 210px; } }
+
+  a.style-card:hover { transform: translateY(-3px); border-color: var(--blue-light); }
+
+  /* 사진이 없을 때 쓰는 브랜드 색면 */
+  .style-card[data-tone='tan'] { background: var(--tan); border-color: transparent; }
+  .style-card[data-tone='sand'] { background: var(--sand); border-color: transparent; }
+  .style-card[data-tone='blue'],
+  .style-card[data-tone='olive'] { border-color: transparent; color: var(--white); }
+  .style-card[data-tone='blue'] { background: var(--blue); }
+  .style-card[data-tone='olive'] { background: var(--olive); }
+
+  .style-card__photo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  /* 사진 위 글자가 읽히도록 아래쪽에 어둡게 깔아준다 */
+  .style-card:has(.style-card__photo)::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.05) 55%, transparent);
+  }
+  .style-card:has(.style-card__photo) .style-card__body { color: #fff; }
+
+  .style-card__body { position: relative; z-index: 1; display: grid; gap: 4px; }
+
+  .style-card__en {
+    font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.18em;
+  }
+  .style-card__name { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+  .style-card__desc { font-size: 0.8125rem; line-height: 1.55; }
+
+  /* 배경색마다 읽히는 글자색을 따로 준다.
+     opacity 로 흐리게 하면 밝은 색면(sand·tan) 위에서 대비가 무너진다. */
+  .style-card[data-tone='tan'] .style-card__en,
+  .style-card[data-tone='sand'] .style-card__en { color: #6b6249; }
+  .style-card[data-tone='tan'] .style-card__name,
+  .style-card[data-tone='sand'] .style-card__name { color: #33301f; }
+  .style-card[data-tone='tan'] .style-card__desc,
+  .style-card[data-tone='sand'] .style-card__desc { color: #574f3a; }
+
+  .style-card[data-tone='blue'] .style-card__en,
+  .style-card[data-tone='olive'] .style-card__en { color: rgb(255 255 255 / 0.82); }
+  .style-card[data-tone='blue'] .style-card__desc,
+  .style-card[data-tone='olive'] .style-card__desc { color: rgb(255 255 255 / 0.92); }
+
+  /* 사진 카드는 어두운 그라데이션 위라 흰 글자로 충분하다 */
+  .style-card:has(.style-card__photo) .style-card__en { color: rgb(255 255 255 / 0.85); }
+  .style-card:has(.style-card__photo) .style-card__desc { color: rgb(255 255 255 / 0.95); }
+</style>

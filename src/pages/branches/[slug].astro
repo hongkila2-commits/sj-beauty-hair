@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { BRAND, BRANCHES, mapUrl } from '../../config';
+import PriceTable from '../../components/PriceTable.astro';
+import { BRAND, BRANCHES, mapUrl, bookingLink } from '../../config';
 import type { GetStaticPaths } from 'astro';
 
 export const getStaticPaths = (() =>
@@ -9,6 +10,7 @@ export const getStaticPaths = (() =>
 const { branch } = Astro.props;
 const [year, month] = branch.openedAt.split('-');
 const others = BRANCHES.filter((b) => b.slug !== branch.slug);
+const booking = bookingLink(branch);
 
 /** 운영 햇수. "2016년부터" 같은 표현을 쓰기 위한 값이다. */
 const yearsOpen = new Date().getFullYear() - Number(year);
@@ -73,22 +75,27 @@ const salonSchema = {
           </dl>
 
           <div class="branch__actions">
-            <a href={mapUrl(branch)} target="_blank" rel="noopener noreferrer" class="btn btn--outline">
-              네이버 지도에서 보기
-            </a>
-            {branch.naverBooking && (
-              <a href={branch.naverBooking} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
-                네이버 예약
+            {booking ? (
+              <a href={booking.href} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
+                {booking.label}
               </a>
-            )}
-            {!branch.naverBooking && (
+            ) : branch.phone ? (
+              <a href={`tel:${branch.phone.replace(/-/g, '')}`} class="btn btn--primary">
+                전화 예약 {branch.phone}
+              </a>
+            ) : (
               <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" class="btn btn--primary">
                 인스타그램 DM 문의
               </a>
             )}
+            <a href={mapUrl(branch)} target="_blank" rel="noopener noreferrer" class="btn btn--outline">
+              네이버 지도에서 보기
+            </a>
           </div>
         </div>
       </div>
+
+      <PriceTable branch={branch} />
 
       <div class="branch__others">
         <h2 class="branch__others-title">다른 지점</h2>

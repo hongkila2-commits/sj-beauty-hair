@@ -1,0 +1,75 @@
+---
+/** 이벤트 목록에 쓰는 카드. 사진이 없으면 지정한 브랜드 색면으로 대신한다. */
+interface Props {
+  promotion: {
+    id: string;
+    data: {
+      title: string;
+      subtitle?: string;
+      badge?: string;
+      period?: string;
+      accent: string;
+      thumbnail?: string;
+      cards: { heading: string }[];
+    };
+  };
+}
+const { promotion } = Astro.props;
+const { title, subtitle, badge, period, accent, thumbnail, cards } = promotion.data;
+---
+
+<a href={`/events/${promotion.id}`} class="event-card" data-accent={thumbnail ? undefined : accent}>
+  {thumbnail && <img class="event-card__photo" src={thumbnail} alt="" loading="lazy" />}
+
+  <div class="event-card__body">
+    {badge && <span class="event-card__badge">{badge}</span>}
+    {subtitle && <p class="event-card__subtitle">{subtitle}</p>}
+    <h3 class="event-card__title">{title}</h3>
+    {period && <p class="event-card__period">{period}</p>}
+    <span class="event-card__more">자세히 보기 →</span>
+  </div>
+</a>
+
+<style>
+  .event-card {
+    position: relative;
+    display: block;
+    min-height: 260px;
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    background: var(--white);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    transition: transform 0.18s ease;
+  }
+  .event-card:hover { transform: translateY(-3px); }
+
+  .event-card[data-accent='blue'] { background: var(--blue); color: var(--white); border-color: transparent; }
+  .event-card[data-accent='olive'] { background: var(--olive); color: var(--white); border-color: transparent; }
+  .event-card[data-accent='tan'] { background: var(--tan); color: #3f3a2c; border-color: transparent; }
+  .event-card[data-accent='sand'] { background: var(--sand); color: #3f3a2c; border-color: transparent; }
+
+  .event-card__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .event-card:has(.event-card__photo)::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.1) 60%, transparent);
+  }
+  .event-card:has(.event-card__photo) .event-card__body { color: #fff; }
+
+  .event-card__body { position: relative; z-index: 1; display: grid; gap: 6px; height: 100%; align-content: start; }
+
+  .event-card__badge {
+    justify-self: start;
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgb(255 255 255 / 0.85); color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .event-card__subtitle { margin: 0; font-size: 0.8125rem; opacity: 0.85; }
+  .event-card__title { font-size: 1.375rem; line-height: 1.35; color: inherit; }
+  .event-card__period { margin: 0; font-size: 0.8125rem; opacity: 0.8; }
+  .event-card__more { margin-top: 18px; font-size: 0.875rem; font-weight: 600; }
+</style>

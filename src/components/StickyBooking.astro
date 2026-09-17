@@ -1,0 +1,57 @@
+---
+/**
+ * 모바일 화면 하단에 고정되는 예약 바.
+ *
+ * 미용실 홈페이지는 모바일 비중이 압도적인데, 예약 버튼이 화면 위쪽에만 있으면
+ * 글을 읽다 예약하려는 순간 다시 위로 올라가야 한다. 그래서 항상 보이게 둔다.
+ * 데스크톱에서는 숨긴다 — 화면이 넓어 헤더 버튼으로 충분하다.
+ */
+import { BRAND, BRANCHES, bookingLink } from '../config';
+
+const primary = bookingLink() ?? bookingLink(BRANCHES.find((b) => b.isFlagship)) ?? null;
+const tel = BRAND.phone || BRANCHES.find((b) => b.phone)?.phone || '';
+---
+
+<div class="sticky-book" role="complementary" aria-label="예약 바로가기">
+  {primary ? (
+    <a href={primary.href} target="_blank" rel="noopener noreferrer" class="sticky-book__main">
+      {primary.label}
+    </a>
+  ) : (
+    <a href="/branches" class="sticky-book__main">지점별 예약 문의</a>
+  )}
+
+  {tel ? (
+    <a href={`tel:${tel.replace(/-/g, '')}`} class="sticky-book__sub">전화</a>
+  ) : (
+    <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" class="sticky-book__sub">DM</a>
+  )}
+</div>
+
+<style>
+  .sticky-book {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 60;
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--ivory) 94%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+  }
+
+  .sticky-book__main,
+  .sticky-book__sub {
+    display: flex; align-items: center; justify-content: center;
+    padding: 13px 18px;
+    border-radius: var(--radius);
+    font-size: 0.9375rem; font-weight: 700;
+    text-decoration: none;
+  }
+  .sticky-book__main { flex: 1; background: var(--blue); color: var(--white); }
+  .sticky-book__sub { flex: none; border: 1px solid var(--olive); color: var(--olive); }
+
+  /* 화면이 넓으면 필요 없다 */
+  @media (min-width: 880px) { .sticky-book { display: none; } }
+</style>

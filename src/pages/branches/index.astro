@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BranchCard from '../../components/BranchCard.astro';
 import BookingCTA from '../../components/BookingCTA.astro';
-import { BRANCHES } from '../../config';
+import { BRANCHES, PAGES } from '../../config';
 ---
 
 <BaseLayout
@@ -13,8 +13,8 @@ import { BRANCHES } from '../../config';
     <div class="wrap">
       <div class="section-head">
         <span class="section-head__num">02</span>
-        <h1 class="section-head__title">지점안내</h1>
-        <p class="section-head__desc">대전 5개 지점 · 매일 10:00 – 20:30</p>
+        <h1 class="section-head__title">{PAGES.branchesTitle}</h1>
+        <p class="section-head__desc">{PAGES.branchesDesc}</p>
       </div>
       <div class="grid grid--3">
         {BRANCHES.map((branch) => <BranchCard branch={branch} />)}
