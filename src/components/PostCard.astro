@@ -1,0 +1,43 @@
+---
+import { formatDate, isoDate } from '../lib/content';
+
+interface Props {
+  post: {
+    id: string;
+    data: { title: string; date: Date; category: string; summary?: string; thumbnail?: string };
+  };
+}
+const { post } = Astro.props;
+const { title, date, category, summary, thumbnail } = post.data;
+---
+
+<a href={`/blog/${post.id}`} class="post-card card">
+  {thumbnail && (
+    <div class="card__media">
+      <img src={thumbnail} alt="" loading="lazy" />
+    </div>
+  )}
+  <div class="card__body">
+    <p class="post-card__category">{category}</p>
+    <h3 class="post-card__title">{title}</h3>
+    {summary && <p class="post-card__summary">{summary}</p>}
+    <time class="post-card__date" datetime={isoDate(date)}>{formatDate(date)}</time>
+  </div>
+</a>
+
+<style>
+  .post-card__category {
+    margin: 0; font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.1em; color: var(--blue);
+  }
+  .post-card__title { font-size: 1.0625rem; margin: 0; }
+  .post-card__summary {
+    margin: 0; font-size: 0.9375rem; color: var(--ink-soft);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    line-clamp: 2; overflow: hidden;
+  }
+  .post-card__date {
+    margin-top: auto; padding-top: 10px;
+    font-size: 0.8125rem; color: var(--ink-faint);
+  }
+</style>

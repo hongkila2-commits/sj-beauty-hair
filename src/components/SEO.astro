@@ -1,0 +1,49 @@
+---
+/**
+ * 검색엔진과 SNS 공유에 필요한 메타 정보를 한 곳에서 관리한다.
+ * 네이버·구글 노출이 이 사이트의 핵심 목적이라 모든 페이지가 이 컴포넌트를 거친다.
+ */
+import { BRAND } from '../config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  /** 블로그 글이면 'article', 그 외는 'website' */
+  type?: 'website' | 'article';
+  publishedAt?: Date;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = BRAND.description,
+  image = '/og-default.png',
+  type = 'website',
+  publishedAt,
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} | ${BRAND.nameKo}` : `${BRAND.nameKo} — ${BRAND.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(image, Astro.site).href;
+---
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<meta property="og:site_name" content={BRAND.nameKo} />
+<meta property="og:type" content={type} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:locale" content="ko_KR" />
+{publishedAt && <meta property="article:published_time" content={publishedAt.toISOString()} />}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />

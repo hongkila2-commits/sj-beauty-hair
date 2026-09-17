@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { BRAND, CURRICULUM, WORKPLACE } from '../config';
+---
+
+<BaseLayout
+  title="채용"
+  description="SJ뷰티헤어와 함께 성장할 디자이너를 찾습니다. 단계별 교육과정, 직급체계, 복지 안내."
+>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">03</span>
+        <h1 class="section-head__title">교육과정</h1>
+        <p class="section-head__desc">주 2회 교육 · 연습과 과제 지도 · 승급테스트 대비 추가 교육</p>
+      </div>
+
+      <p class="lead">
+        A~D 단계별 3개월 과정, 주니어 스타일리스트 5개월 과정으로 구성됩니다.
+        전 과정 수료 후 승급 테스트를 거칩니다.
+      </p>
+
+      <ol class="steps">
+        {CURRICULUM.map((item, index) => (
+          <li class="steps__item" data-variant={index % 2 === 0 ? 'tan' : 'blue'}>
+            <span class="steps__badge">STEP {item.step}</span>
+            <h3 class="steps__title">{item.title}</h3>
+            <p class="steps__sub">{item.subtitle}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--surface">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">04</span>
+        <h2 class="section-head__title">근무환경</h2>
+      </div>
+
+      <div class="work">
+        {WORKPLACE.map((block, index) => (
+          <div class="work__row">
+            <h3 class="work__label" data-variant={index % 2 === 0 ? 'olive' : 'blue'}>{block.label}</h3>
+            <ul class="work__items">
+              {block.items.map((item) => <li>{item}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div class="work__cta">
+        <p>지원이나 문의는 아래로 연락 주세요.</p>
+        <div class="work__actions">
+          <a href={`mailto:${BRAND.email}?subject=${encodeURIComponent('SJ뷰티헤어 채용 문의')}`} class="btn btn--primary">
+            이메일로 지원하기
+          </a>
+          <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" class="btn btn--outline">
+            인스타그램 DM
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .lead { max-width: 62ch; color: var(--ink-soft); margin-bottom: 36px; }
+
+  .steps { list-style: none; display: grid; gap: 14px; }
+  @media (min-width: 760px) { .steps { grid-template-columns: repeat(5, 1fr); gap: 12px; } }
+  .steps__item { padding: 26px 20px; border-radius: var(--radius); }
+  .steps__item[data-variant='tan'] { background: var(--tan); }
+  .steps__item[data-variant='blue'] { background: var(--blue); color: var(--white); }
+  .steps__badge { display: block; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em; margin-bottom: 10px; color: #6b6249; }
+  .steps__title { font-size: 1rem; margin-bottom: 4px; color: #3f3a2c; }
+  .steps__sub { margin: 0; font-size: 0.875rem; color: #5c553f; }
+  .steps__item[data-variant='blue'] .steps__badge,
+  .steps__item[data-variant='blue'] .steps__title,
+  .steps__item[data-variant='blue'] .steps__sub { color: var(--white); }
+
+  .work { display: grid; gap: 4px; }
+  .work__row { display: grid; gap: 12px; padding-block: 18px; border-bottom: 1px solid var(--line); }
+  @media (min-width: 760px) { .work__row { grid-template-columns: 220px 1fr; gap: 32px; align-items: start; } }
+
+  .work__label {
+    font-size: 0.9375rem; color: var(--white);
+    padding: 14px 18px; border-radius: var(--radius); text-align: center;
+  }
+  .work__label[data-variant='olive'] { background: var(--olive); }
+  .work__label[data-variant='blue'] { background: var(--blue); }
+
+  .work__items { list-style: none; display: grid; gap: 6px; padding-top: 6px; }
+  .work__items li { color: var(--ink); }
+
+  .work__cta { margin-top: 48px; }
+  .work__cta p { color: var(--ink-soft); }
+  .work__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+</style>

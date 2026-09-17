@@ -1,0 +1,19 @@
+{
+  "name": "sj-beauty-hair",
+  "version": "1.0.0",
+  "description": "SJ BEAUTY HAIR 공식 홈페이지",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.3"
+  },
+  "private": true,
+  "type": "module"
+}

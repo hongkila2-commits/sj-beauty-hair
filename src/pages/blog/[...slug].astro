@@ -1,0 +1,153 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { render } from 'astro:content';
+import { publishedPosts, formatDate, isoDate } from '../../lib/content';
+import { BRAND } from '../../config';
+import type { GetStaticPaths } from 'astro';
+
+export const getStaticPaths = (async () => {
+  const posts = await publishedPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post, posts } }));
+}) satisfies GetStaticPaths;
+
+const { post, posts } = Astro.props;
+const { Content, headings } = await render(post);
+const { title, date, category, summary, thumbnail, author } = post.data;
+
+const related = posts
+  .filter((p) => p.id !== post.id && p.data.category === category)
+  .slice(0, 3);
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  datePublished: date.toISOString(),
+  author: { '@type': 'Organization', name: author },
+  publisher: {
+    '@type': 'Organization',
+    name: BRAND.nameKo,
+    logo: { '@type': 'ImageObject', url: new URL('/logo.png', Astro.site).href },
+  },
+  mainEntityOfPage: new URL(`/blog/${post.id}`, Astro.site).href,
+  ...(summary ? { description: summary } : {}),
+  ...(thumbnail ? { image: new URL(thumbnail, Astro.site).href } : {}),
+};
+
+/** h2 만 목차로 쓴다. h3 까지 넣으면 모바일에서 목차가 너무 길어진다. */
+const toc = headings.filter((h) => h.depth === 2);
+---
+
+<BaseLayout
+  title={title}
+  description={summary ?? `${BRAND.nameKo} 헤어칼럼 — ${title}`}
+  image={thumbnail}
+  type="article"
+  publishedAt={date}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} slot="head" />
+
+  <article class="section">
+    <div class="wrap">
+      <nav class="crumb" aria-label="경로">
+        <a href="/blog">헤어칼럼</a>
+        {category !== '헤어칼럼' && <><span aria-hidden="true">/</span> <span>{category}</span></>}
+      </nav>
+
+      <header class="post-head">
+        <p class="post-head__category">{category}</p>
+        <h1 class="post-head__title">{title}</h1>
+        {summary && <p class="post-head__summary">{summary}</p>}
+        <p class="post-head__meta">
+          <time datetime={isoDate(date)}>{formatDate(date)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{author}</span>
+        </p>
+      </header>
+
+      {thumbnail && (
+        <figure class="post-hero">
+          <img src={thumbnail} alt="" width="1200" height="675" />
+        </figure>
+      )}
+
+      <div class="post-body">
+        {toc.length > 1 && (
+          <nav class="toc" aria-label="목차">
+            <h2 class="toc__title">목차</h2>
+            <ul>
+              {toc.map((heading) => (
+                <li><a href={`#${heading.slug}`}>{heading.text}</a></li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
+        <div class="prose"><Content /></div>
+      </div>
+
+      <footer class="post-foot">
+        <a href="/blog" class="btn btn--outline">칼럼 목록으로</a>
+      </footer>
+
+      {related.length > 0 && (
+        <section class="related">
+          <h2 class="related__title">함께 읽어보세요</h2>
+          <div class="grid grid--3">
+            {related.map((p) => <PostCard post={p} />)}
+          </div>
+        </section>
+      )}
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .crumb { font-size: 0.875rem; color: var(--ink-faint); margin-bottom: 28px; }
+  .crumb a { text-decoration: none; }
+  .crumb a:hover { color: var(--blue); }
+
+  .post-head { max-width: 760px; margin-bottom: 36px; }
+  .post-head__category {
+    margin: 0 0 12px; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.14em; color: var(--blue);
+  }
+  .post-head__title {
+    font-size: clamp(1.625rem, 5vw, 2.5rem);
+    line-height: 1.3; margin-bottom: 16px;
+  }
+  .post-head__summary { font-size: 1.0625rem; color: var(--ink-soft); margin-bottom: 16px; }
+  .post-head__meta {
+    display: flex; gap: 10px; align-items: center;
+    margin: 0; font-size: 0.875rem; color: var(--ink-faint);
+  }
+
+  .post-hero { margin: 0 0 40px; }
+  .post-hero img {
+    width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+    border-radius: var(--radius); background: var(--sand);
+  }
+
+  .post-body { display: grid; gap: 32px; }
+  @media (min-width: 1000px) {
+    .post-body { grid-template-columns: 1fr 220px; gap: 56px; }
+    .post-body .prose { grid-row: 1; grid-column: 1; }
+    .toc { grid-row: 1; grid-column: 2; position: sticky; top: 100px; align-self: start; }
+  }
+  .post-body .prose { max-width: 760px; }
+
+  .toc { padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .toc__title {
+    font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 12px; font-weight: 600;
+  }
+  .toc ul { list-style: none; display: grid; gap: 8px; }
+  .toc a { font-size: 0.875rem; color: var(--ink-soft); text-decoration: none; }
+  .toc a:hover { color: var(--blue); }
+
+  .post-foot { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--line); }
+
+  .related { margin-top: 72px; }
+  .related__title { font-size: 1.25rem; margin-bottom: 24px; color: var(--olive); }
+</style>

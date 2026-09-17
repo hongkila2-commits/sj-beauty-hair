@@ -1,0 +1,54 @@
+---
+import type { Branch } from '../config';
+import { mapUrl } from '../config';
+
+interface Props { branch: Branch; }
+const { branch } = Astro.props;
+const [year, month] = branch.openedAt.split('-');
+---
+
+<article class="branch-card card">
+  <a href={`/branches/${branch.slug}`} class="branch-card__media card__media">
+    <img src={branch.photo} alt={`SJ뷰티헤어 ${branch.name} 내부`} loading="lazy" width="452" height="452" />
+  </a>
+  <div class="card__body">
+    <h3 class="branch-card__name">
+      <a href={`/branches/${branch.slug}`}>{branch.name}</a>
+      {branch.isFlagship && <span class="branch-card__badge">본점</span>}
+    </h3>
+    <p class="branch-card__address">{branch.address}</p>
+    <p class="branch-card__meta">{year}년 {Number(month)}월 오픈</p>
+    <div class="branch-card__actions">
+      <a href={mapUrl(branch)} target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
+        길찾기 →
+      </a>
+      {branch.naverBooking && (
+        <a href={branch.naverBooking} target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
+          네이버 예약 →
+        </a>
+      )}
+    </div>
+  </div>
+</article>
+
+<style>
+  .branch-card__media { display: block; aspect-ratio: 1 / 1; }
+  .branch-card__name {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 1.125rem; margin: 0;
+  }
+  .branch-card__name a { text-decoration: none; }
+  .branch-card__name a:hover { color: var(--blue); }
+  .branch-card__badge {
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em;
+    background: var(--tan); color: #4a4330;
+    padding: 3px 8px; border-radius: var(--radius);
+  }
+  .branch-card__address { margin: 0; font-size: 0.9375rem; color: var(--ink-soft); }
+  .branch-card__meta { margin: 0; font-size: 0.8125rem; color: var(--ink-faint); }
+  .branch-card__actions {
+    margin-top: auto; padding-top: 12px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 0.875rem;
+  }
+</style>

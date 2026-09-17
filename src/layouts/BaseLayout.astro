@@ -1,0 +1,42 @@
+---
+import '../styles/global.css';
+import SEO from '../components/SEO.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  publishedAt?: Date;
+  noindex?: boolean;
+}
+
+const props = Astro.props;
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F0EEE8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title="SJ뷰티헤어 헤어칼럼" href="/rss.xml" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
+    <SEO {...props} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a href="#main" class="visually-hidden">본문으로 건너뛰기</a>
+    <Header />
+    <main id="main"><slot /></main>
+    <Footer />
+  </body>
+</html>

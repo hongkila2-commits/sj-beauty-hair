@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { publishedPosts } from '../../lib/content';
+import { CATEGORIES } from '../../content.config';
+
+const posts = await publishedPosts();
+const counts = CATEGORIES.map((category) => ({
+  category,
+  count: posts.filter((post) => post.data.category === category).length,
+}));
+---
+
+<BaseLayout
+  title="헤어칼럼"
+  description="모발 관리, 시술 후 홈케어, 계절별 스타일 제안 — SJ뷰티헤어 디자이너가 직접 쓰는 헤어칼럼."
+>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">04</span>
+        <h1 class="section-head__title">헤어칼럼</h1>
+        <p class="section-head__desc">전체 {posts.length}편</p>
+      </div>
+
+      <div class="filters" role="group" aria-label="분류 필터">
+        <button type="button" class="filters__btn is-active" data-filter="all">전체 {posts.length}</button>
+        {counts.filter((c) => c.count > 0).map((c) => (
+          <button type="button" class="filters__btn" data-filter={c.category}>{c.category} {c.count}</button>
+        ))}
+      </div>
+
+      {posts.length > 0 ? (
+        <div class="grid grid--3" id="post-grid">
+          {posts.map((post) => (
+            <div class="post-item" data-category={post.data.category}>
+              <PostCard post={post} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="empty">아직 등록된 글이 없습니다.</p>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // 글 수가 많지 않으므로 페이지 이동 없이 화면에서 바로 걸러낸다.
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filters__btn');
+  const items = document.querySelectorAll<HTMLElement>('.post-item');
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const filter = button.dataset.filter;
+      buttons.forEach((b) => b.classList.toggle('is-active', b === button));
+      items.forEach((item) => {
+        const match = filter === 'all' || item.dataset.category === filter;
+        item.hidden = !match;
+      });
+    });
+  });
+</script>
+
+<style>
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .filters__btn {
+    padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px;
+    background: transparent; color: var(--ink-soft);
+    font: inherit; font-size: 0.875rem; cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .filters__btn:hover { border-color: var(--blue-light); color: var(--blue); }
+  .filters__btn.is-active { background: var(--olive); border-color: var(--olive); color: var(--ivory); }
+  .empty { color: var(--ink-faint); }
+  .post-item { display: contents; }
+  .post-item[hidden] { display: none; }
+</style>

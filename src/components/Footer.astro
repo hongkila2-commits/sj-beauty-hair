@@ -1,0 +1,91 @@
+---
+import { BRAND, BRANCHES, NAV } from '../config';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="site-footer__top">
+      <div class="site-footer__brand">
+        <img src="/logo.png" alt={BRAND.nameEn} width="900" height="105" />
+        <p class="site-footer__tagline">{BRAND.tagline}</p>
+        <p class="site-footer__hours">
+          영업시간 {BRAND.hours.open} – {BRAND.hours.close} · {BRAND.hours.note}
+        </p>
+      </div>
+
+      <nav class="site-footer__col" aria-label="사이트 메뉴">
+        <h2>메뉴</h2>
+        <ul>
+          {NAV.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        </ul>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="지점 목록">
+        <h2>지점</h2>
+        <ul>
+          {BRANCHES.map((b) => <li><a href={`/branches/${b.slug}`}>{b.name}</a></li>)}
+        </ul>
+      </nav>
+
+      <div class="site-footer__col">
+        <h2>문의</h2>
+        <ul>
+          <li><a href={`mailto:${BRAND.email}`}>{BRAND.email}</a></li>
+          <li>
+            <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer">
+              인스타그램 {BRAND.instagramHandle}
+            </a>
+          </li>
+          {BRAND.phone && <li><a href={`tel:${BRAND.phone.replace(/-/g, '')}`}>{BRAND.phone}</a></li>}
+        </ul>
+      </div>
+    </div>
+
+    <p class="site-footer__copy">© {year} {BRAND.nameKo}. All rights reserved.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--sand);
+    padding-block: 56px 32px;
+    margin-top: 0;
+    font-size: 0.9375rem;
+  }
+
+  .site-footer__top {
+    display: grid;
+    gap: 36px;
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer__brand img { width: 168px; height: auto; margin-bottom: 16px; }
+  .site-footer__tagline { margin: 0 0 6px; color: var(--ink); font-weight: 600; }
+  .site-footer__hours { margin: 0; color: var(--ink-soft); font-size: 0.875rem; }
+
+  .site-footer__col h2 {
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .site-footer__col ul { list-style: none; display: grid; gap: 8px; }
+  .site-footer__col a { color: var(--ink-soft); text-decoration: none; }
+  .site-footer__col a:hover { color: var(--blue); }
+
+  .site-footer__copy {
+    margin: 40px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid color-mix(in srgb, var(--olive) 25%, transparent);
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+  }
+
+  @media (min-width: 720px) {
+    .site-footer__top { grid-template-columns: 1.6fr 1fr 1fr 1.2fr; gap: 32px; }
+  }
+</style>

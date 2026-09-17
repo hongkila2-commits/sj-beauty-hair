@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BranchCard from '../components/BranchCard.astro';
+import PostCard from '../components/PostCard.astro';
+import VideoCard from '../components/VideoCard.astro';
+import BookingCTA from '../components/BookingCTA.astro';
+import { BRAND, BRANCHES } from '../config';
+import { publishedPosts, publishedVideos } from '../lib/content';
+
+const posts = (await publishedPosts()).slice(0, 3);
+const videos = (await publishedVideos()).slice(0, 3);
+
+/** 검색엔진이 "대전 미용실"로 이 브랜드를 찾게 하는 구조화 데이터 */
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: BRAND.nameKo,
+  alternateName: BRAND.nameEn,
+  url: Astro.site?.href,
+  logo: new URL('/logo.png', Astro.site).href,
+  email: BRAND.email,
+  sameAs: [BRAND.instagram],
+  foundingDate: '2016-06',
+  department: BRANCHES.map((b) => ({
+    '@type': 'HairSalon',
+    name: `${BRAND.nameKo} ${b.name}`,
+    address: { '@type': 'PostalAddress', streetAddress: b.address, addressCountry: 'KR' },
+    url: new URL(`/branches/${b.slug}`, Astro.site).href,
+  })),
+};
+---
+
+<BaseLayout>
+  <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} slot="head" />
+
+  <section class="hero">
+    <div class="wrap hero__inner">
+      <p class="eyebrow">Daejeon · Since 2016</p>
+      <h1 class="hero__title">{BRAND.tagline}</h1>
+      <p class="hero__lead">{BRAND.description}</p>
+      <div class="hero__actions">
+        <a href="/branches" class="btn btn--primary">지점 찾기</a>
+        <a href="/blog" class="btn btn--outline">헤어칼럼 보기</a>
+      </div>
+      <dl class="hero__stats">
+        <div><dt>지점</dt><dd>5곳</dd></div>
+        <div><dt>디자이너·스태프</dt><dd>53명</dd></div>
+        <div><dt>브랜드 운영</dt><dd>{new Date().getFullYear() - 2016}년</dd></div>
+      </dl>
+    </div>
+    <div class="hero__shapes" aria-hidden="true"><span></span><span></span></div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">01</span>
+        <h2 class="section-head__title">지점안내</h2>
+        <p class="section-head__desc">대전 서구 · 유성구 · 대덕구 5개 지점</p>
+      </div>
+      <div class="grid grid--3">
+        {BRANCHES.map((branch) => <BranchCard branch={branch} />)}
+      </div>
+    </div>
+  </section>
+
+  <BookingCTA />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">02</span>
+        <h2 class="section-head__title">헤어칼럼</h2>
+        <p class="section-head__desc">모발 관리와 스타일에 관한 이야기</p>
+      </div>
+      {posts.length > 0 ? (
+        <>
+          <div class="grid grid--3">
+            {posts.map((post) => <PostCard post={post} />)}
+          </div>
+          <p class="more"><a href="/blog" class="btn btn--ghost">칼럼 전체 보기 →</a></p>
+        </>
+      ) : (
+        <p class="empty">첫 번째 칼럼을 준비하고 있습니다.</p>
+      )}
+    </div>
+  </section>
+
+  {videos.length > 0 && (
+    <section class="section section--surface">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="section-head__num">03</span>
+          <h2 class="section-head__title">영상</h2>
+          <p class="section-head__desc">시술 과정과 스타일링 팁</p>
+        </div>
+        <div class="grid grid--3">
+          {videos.map((video) => <VideoCard video={video} />)}
+        </div>
+        <p class="more"><a href="/videos" class="btn btn--ghost">영상 전체 보기 →</a></p>
+      </div>
+    </section>
+  )}
+</BaseLayout>
+
+<style>
+  .hero { position: relative; overflow: hidden; }
+  /* 아래 섹션들과 같은 좌측 정렬선을 쓴다. 제목 폭만 제한해 줄바꿈을 잡는다. */
+  .hero__inner { position: relative; z-index: 1; padding-block: 72px 64px; }
+
+  .hero__title {
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    line-height: 1.18;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+    max-width: 12em;
+  }
+  .hero__lead { font-size: 1.0625rem; color: var(--ink-soft); max-width: 46ch; margin-bottom: 32px; }
+  .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .hero__stats {
+    display: flex; flex-wrap: wrap; gap: 32px;
+    margin: 48px 0 0; padding-top: 28px;
+    border-top: 1px solid var(--line);
+    /* 구분선이 배경 원 위를 가로지르지 않도록 본문 폭에 맞춰 끊는다 */
+    max-width: 30em;
+  }
+  .hero__stats dt { font-size: 0.8125rem; color: var(--ink-faint); margin-bottom: 4px; }
+  .hero__stats dd { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--olive); }
+
+  /* PDF 표지의 겹친 두 원 */
+  .hero__shapes { position: absolute; inset: 0; pointer-events: none; }
+  .hero__shapes span { position: absolute; border-radius: 50%; display: block; }
+  .hero__shapes span:nth-child(1) {
+    width: 380px; height: 380px; background: var(--sand);
+    right: -110px; bottom: -190px;
+  }
+  .hero__shapes span:nth-child(2) {
+    width: 400px; height: 400px; background: color-mix(in srgb, var(--blue-light) 85%, transparent);
+    right: -230px; bottom: -210px;
+  }
+  @media (min-width: 900px) {
+    .hero__inner { padding-block: 110px 96px; }
+    .hero__shapes span:nth-child(1) { width: 460px; height: 460px; right: 60px; bottom: -230px; }
+    .hero__shapes span:nth-child(2) { width: 500px; height: 500px; right: -140px; bottom: -250px; }
+  }
+
+  .more { margin: 36px 0 0; }
+  .empty { color: var(--ink-faint); }
+</style>

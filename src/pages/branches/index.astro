@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BranchCard from '../../components/BranchCard.astro';
+import BookingCTA from '../../components/BookingCTA.astro';
+import { BRANCHES } from '../../config';
+---
+
+<BaseLayout
+  title="지점안내"
+  description="대전 서구·유성구·대덕구 5개 지점. 둔산본점, 유성점, 롯데점, 봉명점, 송촌점 주소와 오시는 길 안내."
+>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">02</span>
+        <h1 class="section-head__title">지점안내</h1>
+        <p class="section-head__desc">대전 5개 지점 · 매일 10:00 – 20:30</p>
+      </div>
+      <div class="grid grid--3">
+        {BRANCHES.map((branch) => <BranchCard branch={branch} />)}
+      </div>
+    </div>
+  </section>
+
+  <BookingCTA />
+</BaseLayout>

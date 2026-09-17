@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import VideoCard from '../components/VideoCard.astro';
+import { publishedVideos } from '../lib/content';
+
+const videos = await publishedVideos();
+---
+
+<BaseLayout
+  title="영상"
+  description="SJ뷰티헤어가 직접 제작한 시술 과정·스타일링 영상 모음."
+>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-head__num">05</span>
+        <h1 class="section-head__title">영상</h1>
+        <p class="section-head__desc">전체 {videos.length}편</p>
+      </div>
+
+      {videos.length > 0 ? (
+        <div class="grid grid--3">
+          {videos.map((video) => <VideoCard video={video} />)}
+        </div>
+      ) : (
+        <p class="empty">영상을 준비하고 있습니다.</p>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .empty { color: var(--ink-faint); }
+</style>

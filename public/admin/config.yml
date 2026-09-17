@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────────
+# 글 관리 화면 설정
+#
+# 여기 적힌 항목이 /admin 화면의 입력칸이 된다.
+# 항목을 늘리고 싶으면 fields 아래에 같은 모양으로 한 줄씩 추가하면 된다.
+# ─────────────────────────────────────────────────────────────
+
+backend:
+  name: github
+  repo: hongkila2-commits/sj-beauty-hair
+  branch: main
+  base_url: https://sj-beauty-hair.vercel.app
+  auth_endpoint: api/auth
+
+# 글에 넣는 사진이 저장되는 곳
+media_folder: public/uploads
+public_folder: /uploads
+
+locale: ko
+
+# 저장 버튼을 누르면 GitHub 에 이런 문구로 기록이 남는다
+site_url: https://sj-beauty-hair.vercel.app
+display_url: https://sj-beauty-hair.vercel.app
+logo_url: https://sj-beauty-hair.vercel.app/logo.png
+
+collections:
+  - name: posts
+    label: 헤어칼럼
+    label_singular: 글
+    description: 홈페이지 '헤어칼럼' 에 올라가는 글입니다.
+    folder: content/posts
+    create: true
+    slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
+    preview_path: 'blog/{{slug}}'
+    sortable_fields: [date, title]
+    view_filters:
+      - label: 작성 중인 글만
+        field: draft
+        pattern: true
+    fields:
+      - { name: title, label: 제목, widget: string }
+      - { name: date, label: 작성일, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false, format: 'YYYY-MM-DD' }
+      - name: category
+        label: 분류
+        widget: select
+        options: ['헤어칼럼', '스타일', '공지']
+        default: 헤어칼럼
+      - name: summary
+        label: 한 줄 요약
+        widget: text
+        required: false
+        hint: 목록 화면과 검색 결과에 표시됩니다. 두 줄을 넘기지 않는 편이 좋습니다.
+      - name: thumbnail
+        label: 대표 사진
+        widget: image
+        required: false
+        hint: 목록에서 보이는 사진입니다. 가로로 긴 사진이 잘 어울립니다.
+      - { name: author, label: 작성자, widget: string, default: 'SJ뷰티헤어' }
+      - name: draft
+        label: 작성 중 (체크하면 홈페이지에 보이지 않습니다)
+        widget: boolean
+        default: false
+      - { name: body, label: 본문, widget: markdown }
+
+  - name: videos
+    label: 영상
+    label_singular: 영상
+    description: 홈페이지 '영상' 페이지에 올라가는 유튜브 영상입니다.
+    folder: content/videos
+    create: true
+    slug: '{{slug}}'
+    sortable_fields: [date, title]
+    fields:
+      - { name: title, label: 영상 제목, widget: string }
+      - name: youtubeId
+        label: 유튜브 코드
+        widget: string
+        hint: "유튜브 주소 끝의 11자리입니다. 예) https://youtu.be/AbCdEfGhIjK → AbCdEfGhIjK"
+        pattern: ['^[A-Za-z0-9_-]{11}$', '유튜브 코드 11자리를 정확히 입력해 주세요.']
+      - { name: date, label: 등록일, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false, format: 'YYYY-MM-DD' }
+      - { name: description, label: 설명, widget: text, required: false }
+      - name: draft
+        label: 작성 중 (체크하면 홈페이지에 보이지 않습니다)
+        widget: boolean
+        default: false
+      - { name: body, label: 메모, widget: markdown, required: false }
