@@ -3,7 +3,7 @@
  * 검색엔진과 SNS 공유에 필요한 메타 정보를 한 곳에서 관리한다.
  * 네이버·구글 노출이 이 사이트의 핵심 목적이라 모든 페이지가 이 컴포넌트를 거친다.
  */
-import { BRAND } from '../config';
+import { BRAND, VERIFICATION } from '../config';
 
 interface Props {
   title?: string;
@@ -33,6 +33,10 @@ const ogImage = new URL(image, Astro.site).href;
 <meta name="description" content={description} />
 <link rel="canonical" href={canonical} />
 {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+{/* 사이트 소유 확인용. config.ts 의 VERIFICATION 이 비어 있으면 출력되지 않는다. */}
+{VERIFICATION.naver && <meta name="naver-site-verification" content={VERIFICATION.naver} />}
+{VERIFICATION.google && <meta name="google-site-verification" content={VERIFICATION.google} />}
 
 <meta property="og:site_name" content={BRAND.nameKo} />
 <meta property="og:type" content={type} />

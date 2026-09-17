@@ -22,7 +22,10 @@ export default function handler(request, response) {
 
   const authorizeUrl = new URL('https://github.com/login/oauth/authorize');
   authorizeUrl.searchParams.set('client_id', clientId);
-  authorizeUrl.searchParams.set('scope', 'repo,user');
+  // public_repo 는 '공개 저장소 쓰기' 만 허용한다.
+  // repo 로 두면 이 계정의 모든 비공개 저장소까지 열리므로, 글 쓰는 용도에는 과하다.
+  // ※ 이 저장소를 비공개로 바꾸면 여기를 'repo' 로 되돌려야 로그인이 동작한다.
+  authorizeUrl.searchParams.set('scope', 'public_repo');
   authorizeUrl.searchParams.set('state', state);
 
   response.setHeader('Set-Cookie', [

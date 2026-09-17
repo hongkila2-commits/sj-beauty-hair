@@ -10,14 +10,24 @@ const { branch } = Astro.props;
 const [year, month] = branch.openedAt.split('-');
 const others = BRANCHES.filter((b) => b.slug !== branch.slug);
 
-/** 지역 검색(예: "둔산동 미용실") 노출을 노리는 지점별 구조화 데이터 */
+/** 운영 햇수. "2016년부터" 같은 표현을 쓰기 위한 값이다. */
+const yearsOpen = new Date().getFullYear() - Number(year);
+
+/** 지역 검색(예: "대전 서구 미용실") 노출을 노리는 지점별 구조화 데이터 */
 const salonSchema = {
   '@context': 'https://schema.org',
   '@type': 'HairSalon',
   name: `${BRAND.nameKo} ${branch.name}`,
   image: new URL(branch.photo, Astro.site).href,
   url: new URL(`/branches/${branch.slug}`, Astro.site).href,
-  address: { '@type': 'PostalAddress', streetAddress: branch.address, addressCountry: 'KR' },
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: branch.address,
+    addressLocality: `대전광역시 ${branch.district}`,
+    addressRegion: '대전광역시',
+    addressCountry: 'KR',
+  },
+  areaServed: { '@type': 'City', name: `대전광역시 ${branch.district}` },
   openingHours: `Mo-Su ${BRAND.hours.open}-${BRAND.hours.close}`,
   parentOrganization: { '@type': 'Organization', name: BRAND.nameKo },
   ...(branch.phone ? { telephone: branch.phone } : {}),
@@ -25,8 +35,8 @@ const salonSchema = {
 ---
 
 <BaseLayout
-  title={`${branch.name} · 지점안내`}
-  description={`SJ뷰티헤어 ${branch.name} — ${branch.address}. 영업시간 ${BRAND.hours.open}–${BRAND.hours.close}.`}
+  title={`${branch.name} · 대전 ${branch.district} 미용실`}
+  description={`대전 ${branch.district} ${branch.road}에 있는 미용실 SJ뷰티헤어 ${branch.name}. ${branch.address}. 매일 ${BRAND.hours.open}–${BRAND.hours.close} 영업.`}
   image={branch.photo}
 >
   <script type="application/ld+json" set:html={JSON.stringify(salonSchema)} slot="head" />
@@ -43,8 +53,17 @@ const salonSchema = {
         </div>
 
         <div class="branch__info">
-          <p class="eyebrow">{BRAND.nameEn}</p>
+          <p class="eyebrow">대전 {branch.district} · {branch.road}</p>
           <h1 class="branch__name">{branch.name}</h1>
+
+          <p class="branch__intro">
+            대전 {branch.district} {branch.road}에 있는 SJ뷰티헤어 {branch.name}입니다.
+            {branch.isFlagship
+              ? ` ${year}년 문을 연 1호점으로, 브랜드가 시작된 곳입니다.`
+              : ` ${year}년 ${Number(month)}월에 문을 열어 ${yearsOpen}년째 이 자리를 지키고 있습니다.`}
+            {' '}다섯 개 지점이 같은 교육과정을 거친 디자이너로 운영되어, 어느 지점에서
+            시술받으셔도 같은 기준의 손끝을 만나실 수 있습니다.
+          </p>
 
           <dl class="branch__facts">
             <div><dt>주소</dt><dd>{branch.address}</dd></div>
@@ -97,7 +116,9 @@ const salonSchema = {
   }
   .branch__photo img { width: 100%; height: 100%; object-fit: cover; }
 
-  .branch__name { font-size: clamp(1.75rem, 5vw, 2.5rem); margin-bottom: 28px; }
+  .branch__name { font-size: clamp(1.75rem, 5vw, 2.5rem); margin-bottom: 16px; }
+
+  .branch__intro { color: var(--ink-soft); margin-bottom: 28px; max-width: 52ch; }
 
   .branch__facts { margin: 0 0 32px; display: grid; }
   .branch__facts > div {

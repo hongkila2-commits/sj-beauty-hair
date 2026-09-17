@@ -17,7 +17,7 @@ const [year, month] = branch.openedAt.split('-');
       {branch.isFlagship && <span class="branch-card__badge">본점</span>}
     </h3>
     <p class="branch-card__address">{branch.address}</p>
-    <p class="branch-card__meta">{year}년 {Number(month)}월 오픈</p>
+    <p class="branch-card__meta">대전 {branch.district} · {year}년 {Number(month)}월 오픈</p>
     <div class="branch-card__actions">
       <a href={mapUrl(branch)} target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
         길찾기 →

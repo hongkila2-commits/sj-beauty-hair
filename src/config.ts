@@ -20,6 +20,23 @@ export const BRAND = {
   hours: { open: '10:00', close: '20:30', note: '연중무휴 (명절 휴무)' },
 } as const;
 
+/**
+ * 검색엔진 사이트 등록용 인증 코드.
+ *
+ * 네이버·구글에 홈페이지를 등록하려면 "이 사이트가 내 것"임을 증명해야 한다.
+ * 각 사이트가 주는 코드를 아래에 붙여넣으면 전 페이지에 자동으로 심긴다.
+ * 비워두면 해당 태그가 아예 출력되지 않는다.
+ *
+ *   네이버 : searchadvisor.naver.com → 웹마스터도구 → 사이트 등록
+ *            → HTML 태그 방식 → content="..." 안의 값만 복사
+ *   구글   : search.google.com/search-console → 속성 추가 → URL 접두어
+ *            → HTML 태그 방식 → content="..." 안의 값만 복사
+ */
+export const VERIFICATION = {
+  naver: '',
+  google: '',
+} as const;
+
 export type Branch = {
   slug: string;
   name: string;
@@ -33,6 +50,10 @@ export type Branch = {
   naverMap: string;
   photo: string;
   isFlagship?: boolean;
+  /** 주소에서 그대로 뽑은 자치구. 지역 검색 노출에 쓴다. 예) '서구' */
+  district: string;
+  /** 주소의 도로명. 예) '둔산남로' */
+  road: string;
 };
 
 /** PDF 기업소개서 4페이지 기준. 주소·오픈일은 확정 사실이다. */
@@ -46,6 +67,8 @@ export const BRANCHES: Branch[] = [
     naverBooking: '',
     naverMap: '',
     photo: '/branches/dunsan.webp',
+    district: '서구',
+    road: '둔산남로',
     isFlagship: true,
   },
   {
@@ -57,6 +80,8 @@ export const BRANCHES: Branch[] = [
     naverBooking: '',
     naverMap: '',
     photo: '/branches/yuseong.webp',
+    district: '유성구',
+    road: '대학로',
   },
   {
     slug: 'lotte',
@@ -67,6 +92,8 @@ export const BRANCHES: Branch[] = [
     naverBooking: '',
     naverMap: '',
     photo: '/branches/lotte.webp',
+    district: '서구',
+    road: '계룡로',
   },
   {
     slug: 'bongmyeong',
@@ -77,6 +104,8 @@ export const BRANCHES: Branch[] = [
     naverBooking: '',
     naverMap: '',
     photo: '/branches/bongmyeong.webp',
+    district: '유성구',
+    road: '문화원로',
   },
   {
     slug: 'songchon',
@@ -87,6 +116,8 @@ export const BRANCHES: Branch[] = [
     naverBooking: '',
     naverMap: '',
     photo: '/branches/songchon.webp',
+    district: '대덕구',
+    road: '계족산로',
   },
 ];
 

@@ -135,7 +135,8 @@ const toc = headings.filter((h) => h.depth === 2);
     .post-body .prose { grid-row: 1; grid-column: 1; }
     .toc { grid-row: 1; grid-column: 2; position: sticky; top: 100px; align-self: start; }
   }
-  .post-body .prose { max-width: 760px; }
+  /* min-width:0 이 없으면 표처럼 넓은 내용이 grid 칸을 밀어내 가로 스크롤이 생긴다. */
+  .post-body .prose { max-width: 760px; min-width: 0; }
 
   .toc { padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
   .toc__title {

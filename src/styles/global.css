@@ -199,6 +199,34 @@ ul, ol { margin: 0; padding: 0; }
 }
 .prose hr { border: 0; border-top: 1px solid var(--line); margin: 2.4em 0; }
 
+/* 글 안의 표. 좁은 화면에서는 가로로 밀어서 보게 하고, 넓어지면 일반 표로 돌아간다. */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  margin-block: 1.6em;
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.prose th,
+.prose td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.prose th {
+  background: var(--surface);
+  font-weight: 700;
+  color: var(--olive);
+}
+.prose tbody tr:last-child td { border-bottom: 0; }
+
+@media (min-width: 640px) {
+  .prose table { display: table; white-space: normal; }
+}
+
 /* ── 접근성 ── */
 .visually-hidden {
   position: absolute; width: 1px; height: 1px;
