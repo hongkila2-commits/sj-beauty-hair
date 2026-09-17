@@ -7,7 +7,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "node scripts/check-all.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
@@ -18,6 +18,7 @@
   "type": "module",
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "playwright": "^1.63.0",
     "sharp": "^0.35.4",
     "typescript": "^6.0.3"
   }

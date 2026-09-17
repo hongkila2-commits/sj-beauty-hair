@@ -1,0 +1,99 @@
+# 주간 자동 점검
+#
+# 매주 일요일 새벽(한국시간 01:00)에 홈페이지가 여전히 제대로 도는지 검사한다.
+# 통과하면 아무 연락도 하지 않는다. 매주 '이상 없음' 알림이 오면 사람은 곧
+# 안 읽게 되기 때문이다. 문제가 있을 때만 이슈를 열어 메일이 가게 한다.
+
+name: 주간 점검
+
+on:
+  schedule:
+    # cron 은 UTC 기준이다. 한국시간 일요일 01:00 = UTC 토요일 16:00
+    - cron: '0 16 * * 6'
+  # 필요할 때 Actions 탭에서 버튼으로 바로 돌릴 수 있게 한다
+  workflow_dispatch:
+
+# 이슈를 열고 댓글을 달기 위해 필요한 최소 권한만 준다
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 보안 취약점 검사
+        id: audit
+        run: npm audit --audit-level=high
+
+      - name: 타입 검사
+        id: types
+        run: npx astro check
+
+      - name: 브라우저 설치
+        run: npx playwright install --with-deps chromium
+
+      # 빌드 → 미리보기 기동 → 검사 4종 → 정리까지 한 명령으로 처리한다.
+      # 외부 도구(wait-on 등)를 쓰지 않아 매주 내려받을 것이 없다.
+      - name: 빌드 + 전체 검사
+        id: site
+        run: npm run check
+
+      # ── 실패했을 때만 알린다 ──────────────────────────────────
+      - name: 문제 보고
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '주간 점검 실패';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} 주간 점검에서 문제가 발견됐습니다.`,
+              '',
+              `자세한 기록: ${run}`,
+              '',
+              '확인할 것:',
+              '- 보안 취약점 검사 — 의존성에 알려진 취약점이 생겼는지',
+              '- 타입 검사 — 코드에 타입 오류가 있는지',
+              '- 빌드 + 전체 검사 — 페이지·링크·버튼·팝업·점검화면이 동작하는지',
+              '',
+              '고친 뒤에는 Actions 탭에서 "주간 점검"을 다시 실행해 확인하고 이 이슈를 닫으세요.',
+            ].join('\n');
+
+            // 이미 열린 점검 이슈가 있으면 새로 만들지 않고 댓글만 단다.
+            // 매주 같은 이슈가 쌓이는 걸 막는다.
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'weekly-check',
+            });
+
+            if (open.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: open[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['weekly-check'],
+              });
+            }

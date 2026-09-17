@@ -21,3 +21,6 @@ content/.obsidian/workspace.json
 content/.obsidian/workspace-mobile.json
 content/.obsidian/cache
 content/.obsidian/plugins/*/data.json
+
+# 점검 시 남는 화면 캡처
+.check-shots/

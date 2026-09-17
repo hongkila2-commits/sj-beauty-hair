@@ -6,6 +6,7 @@ import Footer from '../components/Footer.astro';
 import TopBanner from '../components/TopBanner.astro';
 import PromoPopup from '../components/PromoPopup.astro';
 import StickyBooking from '../components/StickyBooking.astro';
+import MaintenanceGate from '../components/MaintenanceGate.astro';
 
 interface Props {
   title?: string;
@@ -37,6 +38,7 @@ const props = Astro.props;
     <slot name="head" />
   </head>
   <body>
+    <MaintenanceGate />
     <a href="#main" class="visually-hidden">본문으로 건너뛰기</a>
     <TopBanner />
     <Header />

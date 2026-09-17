@@ -13,6 +13,7 @@ import branchSettings from '../content/settings/branches.json';
 import homeSettings from '../content/settings/home.json';
 import pageSettings from '../content/settings/pages.json';
 import promotionSettings from '../content/settings/promotion.json';
+import maintenanceSettings from '../content/settings/maintenance.json';
 
 /** 인스타그램 주소에서 표시용 아이디(@handle)를 뽑는다. 관리자가 두 번 입력하지 않도록. */
 function instagramHandleOf(url: string): string {
@@ -50,6 +51,12 @@ export const PAGES = pageSettings;
 
 /** 띠배너·팝업. /admin → 사이트 설정 → 띠배너·팝업 */
 export const PROMO = promotionSettings;
+
+/**
+ * 정기 점검 안내. /admin → 사이트 설정 → 점검 안내
+ * weekday 는 0 이 일요일이다(자바스크립트 관례).
+ */
+export const MAINTENANCE = maintenanceSettings;
 
 /**
  * 검색엔진 사이트 등록용 인증 코드.

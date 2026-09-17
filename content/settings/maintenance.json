@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "weekday": 0,
+  "startHour": 1,
+  "endHour": 2,
+  "title": "시스템 점검 중입니다",
+  "message": "더 나은 서비스를 위해 잠시 점검하고 있습니다. 곧 다시 뵙겠습니다.",
+  "showContact": true
+}

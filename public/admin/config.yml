@@ -324,3 +324,49 @@ collections:
           - { name: popupImage, label: 팝업 사진, widget: image, required: false }
           - { name: popupLinkText, label: 팝업 버튼 문구, widget: string, required: false, default: 자세히 보기 }
           - { name: popupLink, label: 팝업 버튼 주소, widget: string, required: false }
+
+      - name: maintenance
+        label: 점검 안내
+        file: content/settings/maintenance.json
+        format: json
+        fields:
+          - name: enabled
+            label: 점검 안내 사용
+            widget: boolean
+            default: true
+            hint: 정한 요일·시간에 방문자에게 점검 안내 화면을 보여줍니다. 끄면 아무 일도 일어나지 않습니다.
+          - name: weekday
+            label: 요일
+            widget: select
+            options:
+              - { label: '일요일', value: 0 }
+              - { label: '월요일', value: 1 }
+              - { label: '화요일', value: 2 }
+              - { label: '수요일', value: 3 }
+              - { label: '목요일', value: 4 }
+              - { label: '금요일', value: 5 }
+              - { label: '토요일', value: 6 }
+            default: 0
+          - name: startHour
+            label: 시작 시각
+            widget: number
+            value_type: int
+            min: 0
+            max: 23
+            default: 1
+            hint: 24시간 기준입니다. 새벽 1시면 1을 넣으세요.
+          - name: endHour
+            label: 종료 시각
+            widget: number
+            value_type: int
+            min: 1
+            max: 24
+            default: 2
+            hint: 시작보다 커야 합니다. 새벽 2시면 2를 넣으세요.
+          - { name: title, label: 안내 제목, widget: string }
+          - { name: message, label: 안내 문구, widget: text }
+          - name: showContact
+            label: 예약·연락 버튼 보이기
+            widget: boolean
+            default: true
+            hint: 점검 중에도 손님이 예약하거나 연락할 수 있게 합니다. 켜두시는 편이 좋습니다.
