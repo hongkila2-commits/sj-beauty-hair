@@ -7,7 +7,8 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "node scripts/check-all.mjs"
+    "check": "node scripts/check-all.mjs",
+    "domain": "node scripts/check-domain.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
