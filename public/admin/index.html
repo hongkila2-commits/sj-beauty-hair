@@ -6,8 +6,20 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>SJ뷰티헤어 · 글 관리</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!--
+      설정 파일 위치를 절대경로로 못박는다.
+      이 줄이 없으면 Decap CMS 는 'config.yml' 을 문서 기준 상대경로로 찾는데,
+      주소가 /admin (끝 슬래시 없음) 이면 /config.yml 로 해석돼 404 가 난다.
+    -->
+    <link rel="cms-config-url" type="text/yaml" href="/admin/config.yml" />
   </head>
   <body>
-    <script src="https://unpkg.com/decap-cms@^3.8.4/dist/decap-cms.js"></script>
+    <!--
+      버전을 정확히 고정한다. ^3.8.4 같은 범위로 두면 CMS 가 새로 배포될 때마다
+      이 화면이 말없이 따라 올라가고, 어느 날 갑자기 깨질 수 있다.
+      올릴 때는 이 숫자를 직접 바꾸고 /admin 에서 동작을 확인한다.
+    -->
+    <script src="https://unpkg.com/decap-cms@3.16.2/dist/decap-cms.js"></script>
   </body>
 </html>
