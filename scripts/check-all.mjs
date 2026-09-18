@@ -18,6 +18,7 @@ const SUITES = [
   ['화면 조작', 'scripts/check-actions.mjs'],
   ['이벤트 · 팝업', 'scripts/check-promo.mjs'],
   ['점검 안내 화면', 'scripts/check-maintenance.mjs'],
+  ['관리자 로그인', 'scripts/check-admin-login.mjs'],
 ];
 
 function run(command, args, options = {}) {
