@@ -206,8 +206,11 @@ export default async function handler(request, response) {
 
   // 로그인을 시작한 그 브라우저가 맞는지 확인한다.
   if (!code || !state || !expectedState || state !== expectedState) {
+    const host = request.headers['x-forwarded-host'] || request.headers.host;
     const reason = !expectedState
-      ? '로그인 확인용 쿠키가 없습니다. 브라우저가 쿠키를 막고 있거나, 로그인을 시작한 주소와 다른 주소로 돌아왔습니다.'
+      ? `로그인 확인용 쿠키가 이 주소(${host})에 없습니다. `
+        + `브라우저가 쿠키를 막고 있거나, GitHub OAuth App 의 Callback URL 이 `
+        + `https://${host}/api/callback 이 아닐 수 있습니다.`
       : '로그인 요청이 올바르지 않습니다. 관리자 화면에서 다시 시도해 주세요.';
     sendHtml(response, 400, errorPage(reason));
     return;

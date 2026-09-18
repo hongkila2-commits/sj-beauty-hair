@@ -40,6 +40,7 @@ globalThis.fetch = async (input, init) => {
 };
 
 const { default: callback } = await import('../api/callback.js');
+const { default: auth } = await import('../api/auth.js');
 
 /**
  * Vercel 함수는 response.status(…).setHeader(…).send(…) 모양을 쓴다.
@@ -109,6 +110,12 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (url.pathname === '/api/callback') return callback(req, adapt(res));
+
+  if (url.pathname === '/api/auth') {
+    const r = adapt(res);
+    r.redirect = (code, to) => { res.writeHead(code, { Location: to }); res.end(); };
+    return auth(req, r);
+  }
 
   if (url.pathname === '/parent') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -285,7 +292,7 @@ async function runHandshake(popupUrl, delay) {
   await ctx.close();
 }
 
-// ── 9. 관리자 화면이 접속한 주소를 로그인 주소로 쓴다 ───────────
+// ── 9. 관리자 화면이 설정을 config.yml 에서만 가져온다 ──────────
 {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
@@ -295,24 +302,23 @@ async function runHandshake(popupUrl, delay) {
     route.fulfill({
       status: 200,
       contentType: 'application/javascript',
-      body: 'window.CMS = { init: function (o) { window.__cmsInit = o; } };',
+      body: 'window.CMS = { init: function (o) { window.__cmsInit = o || null; window.__cmsInitCalled = true; } };',
     }),
   );
 
   await page.goto(`${BASE}/admin/`, { waitUntil: 'networkidle' });
 
-  const init = await page.evaluate(() => window.__cmsInit ?? null);
-  ok('관리자 화면이 설정을 직접 넘김', init !== null);
-  ok('로그인 주소가 접속한 주소와 같음',
-    init?.config?.backend?.base_url === BASE, String(init?.config?.backend?.base_url));
+  ok('관리자 화면이 편집기를 시작시킴', await page.evaluate(() => window.__cmsInitCalled === true));
 
-  // 넘기는 설정은 backend.base_url 하나뿐이어야 한다.
-  // 다른 걸 같이 넘기면 config.yml 의 해당 항목을 말없이 덮어써 버린다.
-  const keys = Object.keys(init?.config ?? {});
-  ok('덮어쓰는 항목은 backend 하나뿐',
-    keys.length === 1 && keys[0] === 'backend', keys.join(', ') || '(없음)');
-  ok('backend 안에서도 base_url 만 덮어씀',
-    Object.keys(init?.config?.backend ?? {}).join(',') === 'base_url');
+  /*
+    로그인 주소(base_url)를 덮어쓰면 안 된다. GitHub OAuth App 의 Callback URL 은
+    하나뿐이라, 접속한 주소마다 /api/auth 를 따로 태우면 쿠키를 심은 도메인과
+    돌아오는 도메인이 어긋나 로그인이 실패한다.
+  */
+  const init = await page.evaluate(() => window.__cmsInit ?? null);
+  const overrides = Object.keys(init?.config ?? {});
+  ok('로그인 주소를 덮어쓰지 않음(config.yml 값을 그대로 씀)',
+    overrides.length === 0, overrides.join(', ') || '(덮어쓰는 항목 없음)');
 
   // 설정 파일을 찾아가는 길(link 태그)이 그대로인지, 그 파일이 실제로 열리는지.
   const hasLink = await page.locator('link[rel="cms-config-url"][href="/admin/config.yml"]').count();
@@ -323,6 +329,34 @@ async function runHandshake(popupUrl, delay) {
   ok('설정 파일이 실제로 열림', cfg.status() === 200, String(cfg.status()));
   ok('설정 파일에 치환 안 된 자리표시자가 남아 있지 않음', !cfgText.includes('__SITE_URL__'));
   await ctx.close();
+}
+
+// ── 9-2. 로그인 시작 주소와 돌아올 주소가 같은 도메인이다 ───────
+{
+  /*
+    이게 어긋나면 확인용 쿠키를 심은 도메인과 돌아오는 도메인이 달라져
+    로그인이 원인 모르게 실패한다. 실제로 그렇게 고장 났었다.
+    브라우저를 띄우지 않고 응답 헤더만 본다 — GitHub 으로 실제로 나가지 않는다.
+  */
+  const res = await realFetch(`${BASE}/api/auth`, { redirect: 'manual' });
+  const location = res.headers.get('location') ?? '';
+
+  ok('로그인 시작이 GitHub 으로 넘김', location.startsWith('https://github.com/login/oauth/authorize'),
+    location.slice(0, 60));
+
+  const sent = new URL(location || 'https://example.invalid');
+  const redirect = sent.searchParams.get('redirect_uri');
+  ok('돌아올 주소를 명시함(어긋나면 GitHub 이 알려준다)', Boolean(redirect), String(redirect));
+  ok('돌아올 주소가 로그인을 시작한 도메인과 같음',
+    redirect === `https://${new URL(BASE).host}/api/callback`, String(redirect));
+  ok('요청 범위는 공개 저장소 쓰기까지만', sent.searchParams.get('scope') === 'public_repo',
+    String(sent.searchParams.get('scope')));
+
+  const cookie = res.headers.get('set-cookie') ?? '';
+  ok('확인용 state 쿠키를 심음', cookie.includes('oauth_state='), cookie.slice(0, 40));
+  ok('그 쿠키는 스크립트가 못 읽음(HttpOnly)', cookie.includes('HttpOnly'));
+  ok('넘긴 state 와 심은 쿠키가 같은 값',
+    cookie.includes(`oauth_state=${sent.searchParams.get('state')}`));
 }
 
 // ── 10. 편집기를 못 받으면 조용히 빈 화면을 두지 않는다 ─────────

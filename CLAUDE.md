@@ -74,10 +74,23 @@
   보여주고 **창을 닫지 않는다.** 사용자가 그 문구를 읽고 전해줄 수 있어야 한다.
 - **실패를 부모 창에 postMessage 하지 말 것.** Decap 은 실패 알림을 받으면 팝업을
   즉시 닫아버려서, 애써 띄운 사유를 아무도 못 읽는다.
-- **`base_url` 은 `location.origin` 에서 온다.** `public/admin/index.html` 이
-  `CMS_MANUAL_INIT` 으로 `backend.base_url` 만 덮어쓴다. 여기에 도메인을 박아 넣으면
-  대표 도메인 한 곳이 막힐 때 **두 주소 모두** 로그인이 죽는다. 실제로 그랬다.
-  덮어쓰는 항목을 늘리지 말 것 — config.yml 의 해당 항목을 말없이 가린다.
+- **`base_url` 을 `location.origin` 으로 바꾸지 말 것.** 솔깃하지만 틀렸다.
+  GitHub OAuth App 은 Callback URL 을 **하나만** 가진다. 그래서 흐름이 이렇게 된다.
+
+  ```
+  /api/auth (A도메인) → 쿠키를 A에 심음 → GitHub → 등록된 Callback(B도메인)
+  → /api/callback (B) 에는 A의 쿠키가 없다 → 실패
+  ```
+
+  즉 로그인은 **등록된 대표 도메인 한 곳**을 거쳐야 한다. config.yml 의
+  `base_url`(= `__SITE_URL__`)을 그대로 쓰고 `public/admin/index.html` 에서
+  덮어쓰지 않는다. vercel.app 에서 들어와도 로그인 창만 대표 도메인을 거칠 뿐
+  토큰은 창을 넘어 전달되므로 정상 동작한다.
+- **`/api/auth` 는 `redirect_uri` 를 명시한다.** 생략하면 GitHub 이 등록된 주소로
+  조용히 보내버려, 위 불일치가 '창이 떴다 닫히는데 로그인은 안 됨' 으로만 나타난다.
+  명시하면 GitHub 이 `redirect_uri_mismatch` 라고 대놓고 알려준다. 빼지 말 것.
+- **도메인을 바꾸면 OAuth App 의 Callback URL 도 같이 바꾼다.** 안 바꾸면 로그인이
+  전부 막힌다. `src/site.mjs` 를 고칠 때 함께 처리할 것.
 - 고친 뒤에는 `node scripts/check-admin-login.mjs` 를 돌린다. 이 검사에는
   **예전 코드를 그대로 둔 대조군**이 있다. 대조군이 통과하기 시작하면 검사가
   무의미해진 것이니 조건을 다시 볼 것.

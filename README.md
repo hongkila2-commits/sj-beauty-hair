@@ -29,15 +29,26 @@
 | 빨간 글씨로 **사유** 가 뜨고 창이 안 닫힘 | 로그인 실패 | 그 문구를 그대로 알려 주세요 |
 | **관리자 화면이 응답하지 않습니다** | 창은 됐는데 관리자 화면이 못 받음 | 창을 닫고 `/admin` 을 새로고침한 뒤 다시 |
 | **이 주소는 직접 여는 곳이 아닙니다** | `/api/auth` 주소를 직접 입력함 | `/admin` 으로 들어가 로그인 버튼을 누르세요 |
+| GitHub 화면에 **redirect_uri_mismatch** | OAuth App 설정이 어긋남 | 아래를 확인하세요 |
 
 실패한 창은 **일부러 닫지 않습니다.** 사유를 읽으실 수 있어야 하기 때문입니다.
 
-두 주소 모두 각자 로그인됩니다. 한쪽이 안 되면 다른 쪽으로 글을 올리실 수 있습니다.
+**가장 흔한 원인은 GitHub 쪽 주소 설정입니다.** 도메인을 바꾸면 여기도 같이 바꿔야 합니다.
 
-- `https://sjbthair.com/admin`
-- `https://sj-beauty-hair.vercel.app/admin`
+1. GitHub → 우측 상단 프로필 → **Settings**
+2. 맨 아래 **Developer settings** → **OAuth Apps** → 해당 앱
+3. **Authorization callback URL** 이 아래와 정확히 같은지 확인
+
+   ```
+   https://sjbthair.com/api/callback
+   ```
+
+4. 다르면 고치고 **Update application** 을 누릅니다.
 
 > 쿠키를 막아두면 로그인이 안 됩니다. 시크릿 모드나 쿠키 차단 확장을 끄고 시도해 보세요.
+
+> `sj-beauty-hair.vercel.app/admin` 에서도 로그인됩니다. 로그인 창만 대표 도메인을
+> 거칠 뿐, 글은 어느 쪽에서든 올리실 수 있습니다.
 
 ### 방법 2. Obsidian (개인 집필용)
 
@@ -213,7 +224,7 @@ export const SITE = {
 고친 뒤 **반드시 함께 해야 할 것 두 가지**가 있습니다.
 
 1. **Vercel** → Settings → Domains 에 새 도메인 추가
-2. **GitHub OAuth App** → Authorization callback URL 을 `https<새도메인>/api/callback` 로 변경
+2. **GitHub OAuth App** → Authorization callback URL 을 `https://<새도메인>/api/callback` 로 변경
    — 이걸 빠뜨리면 `/admin` 로그인이 `redirect_uri_mismatch` 오류로 막힙니다
 
 > 관리자 화면 설정(`public/admin/config.yml`)에는 주소 대신 `__SITE_URL__` 이
