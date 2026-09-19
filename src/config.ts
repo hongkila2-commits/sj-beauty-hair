@@ -206,7 +206,9 @@ export const COMPANY = [
   { label: '사업영역', value: '미용실 프랜차이즈' },
   { label: '설립연월', value: '2016년 6월 · 1호 본점 개점' },
   { label: '지점 수', value: '5개 지점' },
-  { label: '사원 수', value: '5개점 총 53명' },
+  // 이 숫자는 메인 화면 숫자 소개(content/settings/home.json 의 stats)에도 나온다.
+  // 한쪽만 고치면 홈페이지에 서로 다른 인원수가 동시에 보인다. 함께 고칠 것.
+  { label: '사원 수', value: '5개점 총 50명' },
 ] as const;
 
 /** PDF 5페이지 교육과정. */

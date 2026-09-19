@@ -76,7 +76,14 @@ const windowLabel =
       <div class="maint__inner">
         <img class="maint__logo" src="/logo.png" alt={BRAND.nameEn} width="900" height="105" />
 
-        <h1 class="maint__title">{M.title}</h1>
+        <!--
+          h1 이 아니라 p 를 쓴다. 이 블록은 평소에 CSS 로 숨겨져 있을 뿐
+          모든 페이지의 HTML 맨 앞에 항상 들어간다. h1 으로 두면 전 페이지의
+          첫 번째 h1 이 '시스템 점검 중입니다' 가 되어, 검색엔진이 각 페이지의
+          진짜 제목 대신 이 문구를 먼저 본다. 바깥 div 가 role="alert" 라
+          점검 중일 때 화면낭독기에도 정상적으로 읽힌다.
+        -->
+        <p class="maint__title">{M.title}</p>
         <p class="maint__message">{M.message}</p>
 
         <dl class="maint__window">

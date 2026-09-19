@@ -96,10 +96,20 @@ for (const vp of VIEWPORTS) {
         og: document.querySelector('meta[property="og:image"]')?.content ?? '',
         jsonld: document.querySelectorAll('script[type="application/ld+json"]').length,
         h1: document.querySelectorAll('h1').length,
+        firstH1: document.querySelector('h1')?.textContent?.trim().slice(0, 30) ?? '',
       }));
       if (!meta.title) problems.push(`${route} title 없음`);
       if (!meta.desc) problems.push(`${route} description 없음`);
       if (!meta.og) problems.push(`${route} og:image 없음`);
+      /*
+        h1 은 페이지마다 정확히 하나여야 한다. 검색엔진이 '이 페이지가 무엇인지'를
+        여기서 읽는다. 예전에 점검 안내 문구가 h1 으로 전 페이지 맨 앞에 들어가
+        모든 페이지의 첫 h1 이 '시스템 점검 중입니다' 였던 적이 있다.
+        그때 이 숫자를 출력만 하고 검사하지 않아 몇 주를 모르고 지나쳤다.
+      */
+      if (meta.h1 !== 1) {
+        problems.push(`${route} h1 이 ${meta.h1}개 (1개여야 함) — 첫 h1: "${meta.firstH1}"`);
+      }
       console.log(`[meta] ${route.padEnd(34)} h1=${meta.h1} jsonld=${meta.jsonld} :: ${meta.title}`);
 
       for (const href of await page.evaluate(() =>
