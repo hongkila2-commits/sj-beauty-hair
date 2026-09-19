@@ -91,6 +91,11 @@ const salonSchema = {
             <a href={mapUrl(branch)} target="_blank" rel="noopener noreferrer" class="btn btn--outline">
               네이버 지도에서 보기
             </a>
+            {branch.naverBlog && (
+              <a href={branch.naverBlog} target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
+                네이버 블로그
+              </a>
+            )}
           </div>
         </div>
       </div>

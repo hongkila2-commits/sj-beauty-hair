@@ -118,6 +118,82 @@ for (const vp of VIEWPORTS) {
   await context.close();
 }
 
+// ── 네이버 연결 · 검색엔진 인증 ────────────────────────────────
+/*
+  예약 버튼은 이 홈페이지의 존재 이유다. 한 지점이라도 빠지면 그 지점은
+  예약을 못 받는다. 그래서 다섯 곳을 모두 확인한다.
+
+  일부러 src/config.ts 를 불러오지 않는다. 검사 대상과 같은 코드로 기대값을
+  만들면 그 코드가 틀려도 양쪽이 똑같이 틀려서 검사를 통과해버린다.
+  설정 파일(JSON)을 직접 읽어 화면과 대조한다.
+*/
+{
+  const { readFile } = await import('node:fs/promises');
+  const branches = JSON.parse(await readFile('content/settings/branches.json', 'utf-8')).branches;
+  const site = JSON.parse(await readFile('content/settings/site.json', 'utf-8'));
+  const p = await browser.newPage();
+
+  let addressSearches = 0;
+
+  for (const branch of branches) {
+    await p.goto(`${BASE}/branches/${branch.slug}`, { waitUntil: 'domcontentloaded' });
+    const name = branch.label;
+
+    // 예약 버튼 — 설정 파일의 플레이스 주소로 가야 한다.
+    if (!branch.naverPlace) {
+      problems.push(`${name}: 예약 주소가 비어 있음 — content/settings/branches.json`);
+    } else if ((await p.locator(`a[href="${branch.naverPlace}"]`).count()) === 0) {
+      problems.push(`${name}: 예약 버튼이 화면에 없음 (${branch.naverPlace})`);
+    }
+
+    // 지도 버튼 — 주소가 아니라 네이버 등록 상호로 검색해야 한다.
+    const mapHrefs = await p.locator('a[href^="https://map.naver.com/p/search/"]').evaluateAll(
+      (els) => els.map((el) => el.getAttribute('href')),
+    );
+    if (mapHrefs.length === 0) {
+      problems.push(`${name}: 지도 버튼이 화면에 없음`);
+    } else {
+      const query = decodeURIComponent(mapHrefs[0].split('/search/')[1] ?? '');
+      // 주소로 검색하고 있다면 등록 상호를 못 넣은 지점이다. 아래에서 개수를 센다.
+      if (query.startsWith('대전 ')) addressSearches += 1;
+    }
+
+    // 블로그 버튼 — 주소가 있는 지점에만 나타나야 한다.
+    const blogShown = await p.locator('a[href^="https://blog.naver.com/"]').count();
+    if (branch.naverBlog && blogShown === 0) problems.push(`${name}: 블로그 버튼이 안 보임`);
+    if (!branch.naverBlog && blogShown > 0) problems.push(`${name}: 블로그 주소가 없는데 버튼이 보임`);
+  }
+
+  /*
+    지도 검색어가 주소인 지점은 송촌점 하나뿐이어야 한다(등록 상호를 확인 못 했다).
+    mapUrl() 이 주소 검색으로 되돌아가면 이 숫자가 늘어나 바로 잡힌다.
+  */
+  if (addressSearches !== 1) {
+    problems.push(`지도 링크: 주소로 검색하는 지점이 ${addressSearches}곳 — 1곳(송촌점)이어야 함`);
+  }
+
+  // 메인 히어로의 예약 버튼도 살아있어야 한다.
+  await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+  if ((await p.locator('.hero__actions a[href^="https://m.place.naver.com/"]').count()) === 0) {
+    problems.push('메인 히어로에 네이버 예약 버튼이 없음');
+  }
+
+  // 인증코드 — 비어 있으면 빈 태그를 흘리지 말아야 한다.
+  for (const [key, tag] of [
+    ['naverVerification', 'naver-site-verification'],
+    ['googleVerification', 'google-site-verification'],
+  ]) {
+    const count = await p.locator(`meta[name="${tag}"]`).count();
+    if (site[key] && count === 0) problems.push(`${tag}: 코드를 넣었는데 태그가 안 나옴`);
+    if (!site[key] && count > 0) problems.push(`${tag}: 코드가 비었는데 빈 태그가 출력됨`);
+  }
+
+  const withBlog = branches.filter((b) => b.naverBlog).length;
+  console.log(`\n네이버 연결 — 예약 ${branches.length}곳 · 블로그 ${withBlog}곳 · 상호검색 ${branches.length - addressSearches}곳`);
+  console.log(`검색엔진 인증 — 네이버 ${site.naverVerification ? '있음' : '(비어 있음)'} · 구글 ${site.googleVerification ? '있음' : '(비어 있음)'}`);
+  await p.close();
+}
+
 // 페이지 안의 내부 링크가 전부 살아있는지 확인
 const linkPage = await browser.newPage();
 for (const href of [...seenLinks].sort()) {

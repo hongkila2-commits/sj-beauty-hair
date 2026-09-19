@@ -177,6 +177,20 @@ collections:
             widget: string
             required: false
             hint: 예약 전용 주소가 없을 때 예약 버튼이 여기로 연결됩니다.
+          - name: naverVerification
+            label: 네이버 사이트 인증코드
+            widget: string
+            required: false
+            hint: >-
+              네이버 서치어드바이저 → 사이트 등록 → HTML 태그 방식에서
+              content="..." 안의 값만 복사해 넣으세요. 비워두면 아무것도 출력되지 않습니다.
+          - name: googleVerification
+            label: 구글 사이트 인증코드
+            widget: string
+            required: false
+            hint: >-
+              구글 서치콘솔 → 속성 추가 → HTML 태그 방식에서
+              content="..." 안의 값만 복사해 넣으세요.
           - { name: hoursOpen, label: 영업 시작 시각, widget: string, hint: '예) 10:00' }
           - { name: hoursClose, label: 영업 종료 시각, widget: string, hint: '예) 20:30' }
           - { name: hoursNote, label: 휴무 안내, widget: string, hint: '예) 연중무휴 (명절 휴무)' }
@@ -206,11 +220,16 @@ collections:
                 widget: string
                 required: false
                 hint: 예약 전용 주소가 없을 때 예약 버튼이 여기로 연결됩니다.
+              - name: naverBlog
+                label: 지점 네이버 블로그 주소
+                widget: string
+                required: false
+                hint: 넣으면 지점 페이지에 '네이버 블로그' 버튼이 생깁니다.
               - name: naverMap
                 label: 네이버 지도 주소
                 widget: string
                 required: false
-                hint: 비워두면 주소로 검색하는 링크가 대신 쓰입니다.
+                hint: 비워두면 네이버에 등록된 상호로 검색하는 링크가 쓰입니다.
               - name: showPrices
                 label: 가격표 보이기
                 widget: boolean
