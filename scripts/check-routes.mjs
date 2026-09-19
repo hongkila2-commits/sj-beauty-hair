@@ -1,5 +1,17 @@
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { readFile, readdir } from 'node:fs/promises';
+
+/** dist 안의 모든 HTML 파일 경로. 관리자 화면은 부르는 쪽에서 걸러낸다. */
+async function htmlFiles(dir) {
+  const out = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...(await htmlFiles(full)));
+    else if (entry.name.endsWith('.html')) out.push(full);
+  }
+  return out;
+}
 
 /**
  * 브라우저 실행 경로는 환경마다 다르다.
@@ -138,7 +150,6 @@ for (const vp of VIEWPORTS) {
   설정 파일(JSON)을 직접 읽어 화면과 대조한다.
 */
 {
-  const { readFile } = await import('node:fs/promises');
   const branches = JSON.parse(await readFile('content/settings/branches.json', 'utf-8')).branches;
   const site = JSON.parse(await readFile('content/settings/site.json', 'utf-8'));
   const p = await browser.newPage();
@@ -225,18 +236,6 @@ for (const vp of VIEWPORTS) {
     안 나오면 그 입력칸은 아무 데도 연결되지 않은 것이다.
   */
   {
-    const { readdir } = await import('node:fs/promises');
-
-    async function htmlFiles(dir) {
-      const out = [];
-      for (const entry of await readdir(dir, { withFileTypes: true })) {
-        const full = `${dir}/${entry.name}`;
-        if (entry.isDirectory()) out.push(...(await htmlFiles(full)));
-        else if (entry.name.endsWith('.html')) out.push(full);
-      }
-      return out;
-    }
-
     // Astro 가 내보낸 HTML 의 이스케이프를 되돌려 원문과 비교할 수 있게 한다.
     const unescape = (t) => t
       .replace(/&#38;|&amp;/g, '&').replace(/&#60;|&lt;/g, '<').replace(/&#62;|&gt;/g, '>')
@@ -273,6 +272,47 @@ for (const vp of VIEWPORTS) {
       }
     }
     console.log(`관리자 입력칸 — 페이지 문구 ${checked}개 값이 화면에 나오는지 확인`);
+  }
+
+  /*
+    검색엔진에 제출할 것들. 사이트맵 주소가 틀리면 등록 자체가 실패하고,
+    canonical 이 틀리면 검색엔진이 엉뚱한 주소를 대표 주소로 잡는다.
+    도메인을 바꿀 때 여기가 같이 안 바뀌면 조용히 망가지는 자리다.
+  */
+  {
+    const siteUrl = (await import('../src/site.mjs')).SITE.url;
+
+    const indexXml = await readFile('dist/sitemap-index.xml', 'utf-8');
+    if (!indexXml.includes(`${siteUrl}/sitemap-0.xml`)) {
+      problems.push(`사이트맵 목록이 ${siteUrl} 를 가리키지 않음`);
+    }
+
+    const sitemap = await readFile('dist/sitemap-0.xml', 'utf-8');
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    if (locs.length === 0) problems.push('사이트맵이 비어 있음');
+    for (const loc of locs) {
+      if (!loc.startsWith(siteUrl)) problems.push(`사이트맵에 다른 주소가 섞임: ${loc}`);
+    }
+    if (locs.some((l) => l.includes('/admin'))) problems.push('사이트맵에 관리자 화면이 들어감');
+
+    const robots = await readFile('dist/robots.txt', 'utf-8');
+    if (!robots.includes(`Sitemap: ${siteUrl}/sitemap-index.xml`)) {
+      problems.push('robots.txt 의 사이트맵 주소가 틀림');
+    }
+    if (!/Disallow:\s*\/admin/.test(robots)) problems.push('robots.txt 가 관리자 화면을 막지 않음');
+
+    // canonical 은 모든 페이지에 있어야 하고, 전부 대표 도메인이어야 한다.
+    let missing = 0, wrong = 0;
+    for (const file of (await htmlFiles('dist')).filter((f) => !f.includes('/admin/'))) {
+      const html = await readFile(file, 'utf-8');
+      const m = html.match(/<link rel="canonical" href="([^"]+)"/);
+      if (!m) missing += 1;
+      else if (!m[1].startsWith(siteUrl)) wrong += 1;
+    }
+    if (missing) problems.push(`canonical 이 없는 페이지 ${missing}개`);
+    if (wrong) problems.push(`canonical 이 ${siteUrl} 가 아닌 페이지 ${wrong}개`);
+
+    console.log(`검색엔진 제출 — 사이트맵 ${locs.length}개 주소 · canonical 전 페이지 · robots.txt 정상`);
   }
 
   // 메인 히어로의 예약 버튼도 살아있어야 한다.
