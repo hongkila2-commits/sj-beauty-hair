@@ -12,13 +12,10 @@ import { BRAND, CURRICULUM, WORKPLACE, PAGES } from '../config';
       <div class="section-head">
         <span class="section-head__num">06</span>
         <h1 class="section-head__title">{PAGES.recruitTitle}</h1>
-        <p class="section-head__desc">주 2회 교육 · 연습과 과제 지도 · 승급테스트 대비 추가 교육</p>
+        <p class="section-head__desc">{PAGES.recruitDesc}</p>
       </div>
 
-      <p class="lead">
-        A~D 단계별 3개월 과정, 주니어 스타일리스트 5개월 과정으로 구성됩니다.
-        전 과정 수료 후 승급 테스트를 거칩니다.
-      </p>
+      <p class="lead">{PAGES.recruitLead}</p>
 
       <ol class="steps">
         {CURRICULUM.map((item, index) => (
@@ -51,7 +48,7 @@ import { BRAND, CURRICULUM, WORKPLACE, PAGES } from '../config';
       </div>
 
       <div class="work__cta">
-        <p>지원이나 문의는 아래로 연락 주세요.</p>
+        <p>{PAGES.recruitCtaText}</p>
         <div class="work__actions">
           <a href={`mailto:${BRAND.email}?subject=${encodeURIComponent('SJ뷰티헤어 채용 문의')}`} class="btn btn--primary">
             이메일로 지원하기

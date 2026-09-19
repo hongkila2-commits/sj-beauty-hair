@@ -214,6 +214,67 @@ for (const vp of VIEWPORTS) {
     console.log(`회사 개요표 — ${pages.aboutFacts?.length ?? 0}줄 + 영업시간 자동`);
   }
 
+  /*
+    관리자 화면의 입력칸이 '죽어 있지' 않은지 확인한다.
+
+    실제로 있었던 일: 채용·문의 페이지의 문구 4개가 관리자 화면에는 있는데
+    페이지는 그 값을 쓰지 않고 같은 내용을 코드에 그대로 적어두고 있었다.
+    사장님이 고치고 저장해도 홈페이지는 그대로였다 — 아무 오류도 안 나면서.
+
+    그래서 설정 파일에 적은 문구가 실제로 어느 페이지엔가 나오는지 전부 대조한다.
+    안 나오면 그 입력칸은 아무 데도 연결되지 않은 것이다.
+  */
+  {
+    const { readdir } = await import('node:fs/promises');
+
+    async function htmlFiles(dir) {
+      const out = [];
+      for (const entry of await readdir(dir, { withFileTypes: true })) {
+        const full = `${dir}/${entry.name}`;
+        if (entry.isDirectory()) out.push(...(await htmlFiles(full)));
+        else if (entry.name.endsWith('.html')) out.push(full);
+      }
+      return out;
+    }
+
+    // Astro 가 내보낸 HTML 의 이스케이프를 되돌려 원문과 비교할 수 있게 한다.
+    const unescape = (t) => t
+      .replace(/&#38;|&amp;/g, '&').replace(/&#60;|&lt;/g, '<').replace(/&#62;|&gt;/g, '>')
+      .replace(/&#34;|&quot;/g, '"').replace(/&#39;|&apos;/g, "'");
+
+    const files = (await htmlFiles('dist')).filter((f) => !f.includes('/admin/'));
+    const haystack = unescape(
+      (await Promise.all(files.map((f) => readFile(f, 'utf-8')))).join('\n'),
+    );
+
+    /** 문자열 값을 전부 끌어모은다. 사진 경로처럼 화면 글자가 아닌 것은 뺀다. */
+    function texts(value, key = '') {
+      if (typeof value === 'string') {
+        if (!value.trim()) return [];                 // 비워둔 칸은 검사 대상이 아니다
+        if (/image|photo|link|url/i.test(key)) return [];
+        // 문단이 나뉘어 출력되는 값이 있으므로 문단 단위로 쪼갠다.
+        return value.split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
+      }
+      if (Array.isArray(value)) return value.flatMap((v) => texts(v, key));
+      if (value && typeof value === 'object') {
+        return Object.entries(value).flatMap(([k, v]) => texts(v, k));
+      }
+      return [];
+    }
+
+    const pagesJson = JSON.parse(await readFile('content/settings/pages.json', 'utf-8'));
+    let checked = 0;
+    for (const [key, value] of Object.entries(pagesJson)) {
+      for (const text of texts(value, key)) {
+        checked += 1;
+        if (!haystack.includes(text)) {
+          problems.push(`관리자 입력칸 '${key}' 의 값이 어느 페이지에도 안 나옴: "${text.slice(0, 40)}"`);
+        }
+      }
+    }
+    console.log(`관리자 입력칸 — 페이지 문구 ${checked}개 값이 화면에 나오는지 확인`);
+  }
+
   // 메인 히어로의 예약 버튼도 살아있어야 한다.
   await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   if ((await p.locator('.hero__actions a[href^="https://m.place.naver.com/"]').count()) === 0) {

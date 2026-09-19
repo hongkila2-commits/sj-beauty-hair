@@ -211,37 +211,18 @@ export const BRANCHES: Branch[] = BRANCH_BASE.map((base) => {
  */
 export const COMPANY = pageSettings.aboutFacts;
 
-/** PDF 5페이지 교육과정. */
-export const CURRICULUM = [
-  { step: 'A', title: 'A 과정', subtitle: '살롱 베이직 교육' },
-  { step: 'B', title: 'B 과정', subtitle: '살롱 어드밴스 교육 1' },
-  { step: 'C', title: 'C 과정', subtitle: '살롱 어드밴스 교육 2' },
-  { step: 'D', title: 'D 과정', subtitle: '살롱 크리에이티브 교육 1' },
-  { step: 'JR', title: 'JUNIOR STYLIST', subtitle: '살롱 크리에이티브 교육 2' },
-] as const;
+/**
+ * 채용 페이지 교육과정. 처음엔 PDF 기업소개서 5페이지 내용이었다.
+ * /admin → 사이트 설정 → 페이지 문구 → [채용] 교육과정 단계 에서 고친다.
+ */
+export const CURRICULUM = pageSettings.curriculum;
 
-/** PDF 6페이지 근무환경. */
-export const WORKPLACE = [
-  {
-    label: '급여 / 시간',
-    items: ['신입 200만원~', '3개월마다 승급 후 직급수당 지급', '주 5일 근무, 근무시간 10:00 ~ 20:30'],
-  },
-  {
-    label: '직급체계',
-    items: [
-      '디자이너 : 스탭 → 디자이너 → 수석디자이너 → 실장 → 원장',
-      '매니지먼트 : 매니저 → 팀장 → 실장 → 부점장 → 점장 → 본부장',
-    ],
-  },
-  {
-    label: '복지',
-    items: ['명절 휴무 / 명절 상여금 지급', '여름휴가 / 월차 및 근속 연차 지급', '4대보험 / 퇴직금'],
-  },
-  {
-    label: '업무지원',
-    items: ['SNS(네이버/인스타/유튜브 등) 마케팅 지원', '상반기 우수지점 포상 / 하반기 직무 분야별 성과 우수 포상'],
-  },
-] as const;
+/**
+ * 채용 페이지 근무환경. 처음엔 PDF 기업소개서 6페이지 내용이었다.
+ * /admin → 사이트 설정 → 페이지 문구 → [채용] 근무환경 에서 고친다.
+ * 한 묶음(label) 안에 여러 줄(items)이 들어간다.
+ */
+export const WORKPLACE = pageSettings.workplace;
 
 export const NAV = [
   { href: '/about', label: '브랜드' },

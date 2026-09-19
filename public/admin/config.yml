@@ -325,7 +325,28 @@ collections:
           - { name: recruitTitle, label: '[채용] 교육과정 제목', widget: string }
           - { name: recruitDesc, label: '[채용] 교육과정 설명', widget: string }
           - { name: recruitLead, label: '[채용] 교육과정 본문', widget: text }
+          - name: curriculum
+            label: '[채용] 교육과정 단계'
+            widget: list
+            summary: 'STEP {{fields.step}} · {{fields.title}} — {{fields.subtitle}}'
+            hint: 단계를 추가·삭제하거나 순서를 바꿀 수 있습니다.
+            fields:
+              - { name: step, label: 단계 기호, widget: string, hint: "예) A, B, JR — 화면에 'STEP A' 처럼 나옵니다" }
+              - { name: title, label: 과정 이름, widget: string, hint: '예) A 과정' }
+              - { name: subtitle, label: 설명, widget: string, hint: '예) 살롱 베이직 교육' }
           - { name: workplaceTitle, label: '[채용] 근무환경 제목', widget: string }
+          - name: workplace
+            label: '[채용] 근무환경'
+            widget: list
+            summary: '{{fields.label}}'
+            hint: 급여·직급체계·복지처럼 묶음을 만들고, 그 안에 줄을 넣습니다.
+            fields:
+              - { name: label, label: 묶음 이름, widget: string, hint: '예) 급여 / 시간' }
+              - name: items
+                label: 내용
+                widget: list
+                field: { name: item, label: 한 줄, widget: string }
+                hint: 한 줄씩 추가합니다.
           - { name: recruitCtaText, label: '[채용] 지원 안내문', widget: string }
 
       - name: promotion
