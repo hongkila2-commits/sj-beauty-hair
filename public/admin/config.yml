@@ -303,6 +303,16 @@ collections:
             widget: text
             hint: 빈 줄 하나를 사이에 두면 문단이 나뉩니다.
           - { name: aboutImage, label: '[브랜드] 사진', widget: image, required: false }
+          - name: aboutFacts
+            label: '[브랜드] 회사 개요표'
+            widget: list
+            summary: '{{fields.label}} — {{fields.value}}'
+            hint: >-
+              브랜드 소개 페이지 오른쪽 표입니다. 줄을 추가·삭제하거나 순서를 바꿀 수 있습니다.
+              영업시간 줄은 연락처 설정에서 자동으로 붙으니 여기에 넣지 마세요.
+            fields:
+              - { name: label, label: 항목, widget: string, hint: '예) 사원 수' }
+              - { name: value, label: 내용, widget: string, hint: '예) 5개점 총 50명' }
           - { name: branchesTitle, label: '[지점안내] 제목', widget: string }
           - { name: branchesDesc, label: '[지점안내] 설명', widget: string }
           - { name: blogTitle, label: '[헤어칼럼] 제목', widget: string }

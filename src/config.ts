@@ -200,16 +200,16 @@ export const BRANCHES: Branch[] = BRANCH_BASE.map((base) => {
   };
 });
 
-/** PDF 3페이지 회사 개요표. */
-export const COMPANY = [
-  { label: '회사명', value: 'SJ뷰티헤어' },
-  { label: '사업영역', value: '미용실 프랜차이즈' },
-  { label: '설립연월', value: '2016년 6월 · 1호 본점 개점' },
-  { label: '지점 수', value: '5개 지점' },
-  // 이 숫자는 메인 화면 숫자 소개(content/settings/home.json 의 stats)에도 나온다.
-  // 한쪽만 고치면 홈페이지에 서로 다른 인원수가 동시에 보인다. 함께 고칠 것.
-  { label: '사원 수', value: '5개점 총 50명' },
-] as const;
+/**
+ * 브랜드 소개 페이지의 회사 개요표. 처음엔 PDF 기업소개서 3페이지 내용이었다.
+ *
+ * /admin → 사이트 설정 → 페이지 문구 → 회사 개요표 에서 줄을 추가·삭제·수정한다.
+ * 항목 이름까지 바꿀 수 있도록 고정된 필드가 아니라 label/value 목록으로 둔다.
+ *
+ * ※ '사원 수' 는 메인 화면 숫자 소개(content/settings/home.json 의 stats)에도
+ *   나온다. 한쪽만 고치면 홈페이지에 서로 다른 인원수가 동시에 보인다.
+ */
+export const COMPANY = pageSettings.aboutFacts;
 
 /** PDF 5페이지 교육과정. */
 export const CURRICULUM = [

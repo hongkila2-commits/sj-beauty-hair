@@ -182,6 +182,38 @@ for (const vp of VIEWPORTS) {
     problems.push(`지도 링크: 주소로 검색하는 지점이 ${addressSearches}곳 — 1곳(송촌점)이어야 함`);
   }
 
+  /*
+    브랜드 소개의 회사 개요표. 관리자 화면에서 줄을 지울 수 있게 되었으므로,
+    설정 파일에 적은 줄이 실제로 화면에 나오는지 대조한다.
+    영업시간 줄은 연락처 설정에서 자동으로 붙으므로 한 줄 더 많아야 한다.
+  */
+  {
+    const pages = JSON.parse(await readFile('content/settings/pages.json', 'utf-8'));
+    await p.goto(`${BASE}/about`, { waitUntil: 'domcontentloaded' });
+
+    const rows = await p.locator('.about__fact').evaluateAll((els) =>
+      els.map((el) => ({
+        label: el.querySelector('dt')?.textContent?.trim() ?? '',
+        value: el.querySelector('dd')?.textContent?.trim() ?? '',
+      })),
+    );
+
+    if (!Array.isArray(pages.aboutFacts) || pages.aboutFacts.length === 0) {
+      problems.push('회사 개요표가 비어 있음 — content/settings/pages.json 의 aboutFacts');
+    }
+    for (const fact of pages.aboutFacts ?? []) {
+      const found = rows.find((r) => r.label === fact.label);
+      if (!found) problems.push(`회사 개요표: '${fact.label}' 줄이 화면에 없음`);
+      else if (found.value !== fact.value) {
+        problems.push(`회사 개요표: '${fact.label}' 이 '${found.value}' — '${fact.value}' 이어야 함`);
+      }
+    }
+    if (!rows.some((r) => r.label === '영업시간')) {
+      problems.push('회사 개요표: 영업시간 줄이 자동으로 붙지 않음');
+    }
+    console.log(`회사 개요표 — ${pages.aboutFacts?.length ?? 0}줄 + 영업시간 자동`);
+  }
+
   // 메인 히어로의 예약 버튼도 살아있어야 한다.
   await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   if ((await p.locator('.hero__actions a[href^="https://m.place.naver.com/"]').count()) === 0) {
