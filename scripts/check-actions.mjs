@@ -89,23 +89,64 @@ for (const [route, want] of Object.entries(expected)) {
   await page.close();
 }
 
-// ── 3. 영상 재생 버튼 ───────────────────────────────────────────
+// ── 3. 영상: 그 자리에서 재생 ───────────────────────────────────
+/*
+  영상은 유튜브로 나가지 않고 이 페이지에서 재생돼야 한다.
+  동시에, 재생을 누르기 전에는 유튜브에서 아무것도 내려받지 않아야 한다 —
+  플레이어를 미리 심어두면 영상 편수만큼 수 MB 를 아무 이유 없이 쓰게 된다.
+  이 샌드박스는 유튜브 접속이 막혀 있으므로 '요청이 나가는지'만 가로채 본다.
+*/
 {
-  const page = await ctx.newPage();
-  await page.goto(BASE + '/videos', { waitUntil: 'networkidle' });
+  const watch = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'ko-KR' });
+  const asked = [];
+  for (const pattern of ['**://*.youtube-nocookie.com/**', '**://*.youtube.com/**']) {
+    await watch.route(pattern, (route) => { asked.push(route.request().url()); return route.abort(); });
+  }
+  await watch.route('**://i.ytimg.com/**', (route) => route.abort());
+  await watch.route('**://www.google.com/**', (route) => route.abort());
+
+  const page = await watch.newPage();
+  await page.goto(BASE + '/videos', { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(500);
   await dismissPopup(page);
+
   const cards = await page.locator('.video-card__frame').count();
   if (cards > 0) {
-    const href = await page.locator('.video-card__frame').first().getAttribute('href');
-    const target = await page.locator('.video-card__frame').first().getAttribute('target');
-    ok('영상: 유튜브로 나가는 링크',
-       !!href && href.startsWith('https://www.youtube.com/watch?v=') && target === '_blank',
-       href ?? '없음');
+    ok('영상: 누르기 전에는 유튜브를 불러오지 않음', asked.length === 0, `요청 ${asked.length}건`);
+    ok('영상: 누르기 전에는 플레이어가 없음',
+       (await page.locator('.video-card__frame iframe').count()) === 0);
+
+    await page.locator('[data-yt-play]').first().click();
+    await page.waitForTimeout(500);
+
+    const frame = page.locator('.video-card__frame iframe').first();
+    const src = await frame.getAttribute('src');
+    ok('영상: 누르면 그 자리에서 재생', (await page.locator('.video-card__frame iframe').count()) === 1);
+    ok('영상: 자동재생으로 열림', !!src && src.includes('autoplay=1'), src ?? '없음');
+    ok('영상: 휴대폰에서 전체화면으로 튀지 않음', !!src && src.includes('playsinline=1'));
+    ok('영상: 전체화면 버튼 사용 가능', (await frame.getAttribute('allowfullscreen')) !== null);
+    ok('영상: 화면낭독기용 제목 있음', !!(await frame.getAttribute('title')));
+
+    // 제목 링크는 그대로 유튜브로 간다 — 거기서 보고 싶은 사람도 있다.
+    const titleHref = await page.locator('.video-card__title a').first().getAttribute('href');
+    ok('영상: 제목은 유튜브로 연결',
+       !!titleHref && titleHref.startsWith('https://www.youtube.com/watch?v='), titleHref ?? '없음');
+
+    // 키보드만 쓰는 사람도 재생할 수 있어야 한다.
+    const kb = await watch.newPage();
+    await kb.goto(BASE + '/videos', { waitUntil: 'domcontentloaded' });
+    await kb.waitForTimeout(400);
+    await dismissPopup(kb);
+    await kb.locator('[data-yt-play]').first().focus();
+    await kb.keyboard.press('Enter');
+    await kb.waitForTimeout(400);
+    ok('영상: 키보드로도 재생', (await kb.locator('.video-card__frame iframe').count()) === 1);
+    await kb.close();
   } else {
     // 등록된 영상이 없으면 검사 자체가 불가능하다. 실패가 아니라 건너뜀이다.
     skip.push('영상 — 등록된 영상이 없어 검사하지 못함');
   }
-  await page.close();
+  await watch.close();
 }
 
 // ── 4. 문의 폼 ──────────────────────────────────────────────────

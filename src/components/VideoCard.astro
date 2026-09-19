@@ -2,9 +2,15 @@
 /**
  * 유튜브 영상 카드.
  *
- * 누르면 유튜브에서 열린다. 그 자리에서 재생하지 않는 이유는, 관리자가 올린
- * 대표 이미지를 그대로 보여주고 재생은 유튜브에 맡기는 편이 관리도 쉽고
- * 페이지도 가볍기 때문이다(이 컴포넌트는 브라우저로 나가는 스크립트가 없다).
+ * 재생 버튼을 누르면 **이 자리에서** 영상이 재생된다. 유튜브로 나가지 않는다.
+ *
+ * 다만 유튜브 플레이어를 미리 심어두지는 않는다. iframe 하나가 1MB 가까운
+ * 스크립트를 끌고 오기 때문에, 영상 9편이 있는 목록이라면 아무도 재생을 누르지
+ * 않아도 9MB 를 내려받게 된다. 고객 휴대폰 데이터가 그만큼 나가고 페이지가
+ * 느려지며, 느린 페이지는 검색 순위에도 불리하다.
+ *
+ * 그래서 평소에는 대표 이미지와 재생 버튼만 두고, **눌렀을 때** 플레이어를
+ * 만들어 자동재생시킨다. 고객이 보는 동작은 유튜브를 미리 심어둔 것과 같다.
  *
  * 대표 이미지를 올리지 않으면 유튜브가 자동 생성한 썸네일을 대신 쓴다.
  */
@@ -29,16 +35,12 @@ const image = thumbnail || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
 ---
 
 <article class="video-card card">
-  <a
-    class="video-card__frame"
-    href={watchUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label={`${title} — 유튜브에서 보기`}
-  >
+  <div class="video-card__frame" data-yt={youtubeId} data-yt-title={title}>
     <img src={image} alt="" loading="lazy" width="480" height="360" />
-    <span class="video-card__icon" aria-hidden="true">▶</span>
-  </a>
+    <button type="button" class="video-card__play" data-yt-play aria-label={`${title} 재생`}>
+      <span class="video-card__icon" aria-hidden="true">▶</span>
+    </button>
+  </div>
 
   <div class="card__body">
     <h3 class="video-card__title">
@@ -48,6 +50,66 @@ const image = thumbnail || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
     <time class="video-card__date" datetime={isoDate(date)}>{formatDate(date)}</time>
   </div>
 </article>
+
+<script>
+  /*
+    재생 버튼을 누른 그 카드만 플레이어로 바꾼다.
+
+    카드마다 스크립트를 붙이지 않고 문서 전체에서 클릭을 한 번만 받는다.
+    영상이 몇 편이든 이 코드는 한 벌만 돈다.
+  */
+  const PLAYER_ORIGIN = 'https://www.youtube-nocookie.com';
+
+  /** 누르기 전에 연결만 미리 터둔다. 첫 재생이 눈에 띄게 빨라진다. */
+  let warmed = false;
+  function warmUp() {
+    if (warmed) return;
+    warmed = true;
+    for (const href of [PLAYER_ORIGIN, 'https://www.google.com']) {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = href;
+      document.head.appendChild(link);
+    }
+  }
+
+  function play(frame: HTMLElement) {
+    const id = frame.dataset.yt;
+    if (!id || frame.dataset.ytPlaying === '1') return;
+
+    const iframe = document.createElement('iframe');
+    // playsinline: 아이폰에서 전체화면으로 튀지 않고 그 자리에서 재생된다.
+    iframe.src = `${PLAYER_ORIGIN}/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+    iframe.title = frame.dataset.ytTitle ?? '영상';
+    iframe.allow =
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+
+    frame.replaceChildren(iframe);
+    frame.dataset.ytPlaying = '1';
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    const button = target?.closest<HTMLElement>('[data-yt-play]');
+    if (!button) return;
+
+    const frame = button.closest<HTMLElement>('[data-yt]');
+    if (frame) play(frame);
+  });
+
+  // 마우스를 올리거나 손가락이 닿으면 그때 연결을 준비한다.
+  for (const type of ['pointerover', 'touchstart'] as const) {
+    document.addEventListener(
+      type,
+      (event) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('[data-yt]')) warmUp();
+      },
+      { passive: true },
+    );
+  }
+</script>
 
 <style>
   .video-card__frame {
@@ -63,18 +125,43 @@ const image = thumbnail || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
   }
   .video-card__frame:hover img { transform: scale(1.03); opacity: 0.9; }
 
+  /* 재생 버튼이 카드 전체를 덮는다. 어디를 눌러도 재생된다. */
+  .video-card__play {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: 0; padding: 0; margin: 0;
+    background: transparent;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .video-card__play:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: -3px;
+  }
+
   .video-card__icon {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 62px; height: 62px; border-radius: 50%;
     background: color-mix(in srgb, var(--blue) 90%, transparent);
     color: #fff; font-size: 1.1rem; line-height: 62px; text-align: center;
     padding-left: 4px; transition: transform 0.18s ease;
   }
-  .video-card__frame:hover .video-card__icon { transform: translate(-50%, -50%) scale(1.08); }
+  .video-card__play:hover .video-card__icon,
+  .video-card__play:focus-visible .video-card__icon { transform: scale(1.08); }
+
+  /* 재생이 시작되면 플레이어가 그 자리를 그대로 채운다. */
+  .video-card__frame :global(iframe) {
+    width: 100%; height: 100%; border: 0; display: block;
+  }
 
   .video-card__title { font-size: 1.0625rem; margin: 0; }
   .video-card__title a { text-decoration: none; }
   .video-card__title a:hover { color: var(--blue); }
   .video-card__desc { margin: 0; font-size: 0.9375rem; color: var(--ink-soft); }
   .video-card__date { margin-top: auto; padding-top: 10px; font-size: 0.8125rem; color: var(--ink-faint); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video-card__frame img,
+    .video-card__icon { transition: none; }
+    .video-card__frame:hover img { transform: none; }
+  }
 </style>
